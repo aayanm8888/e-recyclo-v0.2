@@ -1,6 +1,6 @@
 """
 Production settings for E-RECYCLO on Railway
-This file OVERRIDES base.py settings for production
+GMAIL SMTP Configuration
 """
 
 from .base import *
@@ -31,12 +31,7 @@ if os.environ.get('RAILWAY_PUBLIC_DOMAIN'):
 # DATABASE - COMPLETELY OVERRIDE base.py
 # ========================================
 
-# This REPLACES the DATABASES setting from base.py
-# Railway provides DATABASE_URL environment variable
-# It looks like: postgresql://user:password@host:port/database
-
 if 'DATABASE_URL' in os.environ:
-    # Use Railway's PostgreSQL (PRODUCTION)
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
@@ -46,8 +41,7 @@ if 'DATABASE_URL' in os.environ:
         )
     }
 else:
-    # Fallback to base.py settings (should never happen in production)
-    # But keeps local testing working if you run with production settings
+    # Fallback to base.py settings
     pass
 
 # ========================================
@@ -75,25 +69,26 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 # ========================================
-# EMAIL (Your Brevo SMTP)
+# EMAIL SETTINGS (GMAIL SMTP)
 # ========================================
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='smtp-relay.brevo.com')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = True
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='E-RECYCLO <noreply@erecyclo.in>')
+
+# OTP Settings
+OTP_EXPIRY_MINUTES = config('OTP_EXPIRY_MINUTES', default=10, cast=int)
 
 # ========================================
 # STATIC FILES (WhiteNoise)
 # ========================================
 
-# Insert WhiteNoise middleware
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
-
-# WhiteNoise storage
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATIC_URL = '/static/'
@@ -128,7 +123,6 @@ if 'REDIS_URL' in os.environ:
     SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
     SESSION_CACHE_ALIAS = 'default'
 else:
-    # Fallback to database sessions
     SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # ========================================
@@ -176,7 +170,7 @@ LOGGING = {
 # ========================================
 
 ADMINS = [
-    ('Admin', config('ADMIN_EMAIL', default='admin@erecyclo.com')),
+    ('Admin', config('ADMIN_EMAIL', default='erecyclo.web@gmail.com')),
 ]
 
 MANAGERS = ADMINS
