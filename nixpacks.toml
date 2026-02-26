@@ -7,14 +7,5 @@ nixPkgs = ["python311", "gcc"]
 
 # 2. Your existing system libraries for OpenCV/YOLO
 aptPkgs = [
-    "libgl1", 
-    "libglib2.0-0", 
-    "libsm6", 
-    "libxext6", 
-    "libxrender-dev", 
-    "libgomp1", 
-    "ffmpeg", 
-    "libgthread-2.0-0", 
-    "libfontconfig1", 
-    "libice6"
+    "libgl1"
 ]
