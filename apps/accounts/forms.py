@@ -6,6 +6,7 @@ All forms with validation and error handling
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 from .models import Account, VendorDetails, CollectorProfile, ClientProfile
 from config.validators import validate_indian_phone
 
@@ -132,6 +133,13 @@ class RegistrationForm(forms.ModelForm):
         """Validate phone number"""
         phone = self.cleaned_data.get('phone_number', '')
         return validate_indian_phone(phone)
+    
+    def clean_password(self):
+        """Validate password strength"""
+        password = self.cleaned_data.get('password')
+        if password:
+            validate_password(password)
+        return password
     
     def clean_password_confirm(self):
         """Validate password confirmation"""

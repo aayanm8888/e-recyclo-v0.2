@@ -12,6 +12,8 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from django.core.files.base import ContentFile
+from django.core.exceptions import ValidationError
+from django.contrib.auth.password_validation import validate_password
 import base64
 import uuid
 
@@ -714,21 +716,29 @@ def reset_password_view(request):
         password = request.POST.get('password', '')
         confirm = request.POST.get('confirm_password', '')
         
-        if not password or len(password) < 8:
-            messages.error(request, 'Password must be at least 8 characters.')
+        if not password:
+            messages.error(request, 'Please enter a password.')
         elif password != confirm:
             messages.error(request, 'Passwords do not match.')
         else:
-            user.set_password(password)
-            user.save()
-            
-            # Clear session
-            for key in ['reset_user_id', 'reset_otp', 'reset_otp_time', 'reset_verified']:
-                request.session.pop(key, None)
-            
-            messages.success(request, 'Password reset successfully! Please login.')
-            return redirect('accounts:login')
-    
+            try:
+                validate_password(password, user)
+                user.set_password(password)
+                user.save()
+                
+                # Clear session
+                for key in ['reset_user_id', 'reset_otp', 'reset_otp_time', 'reset_verified']:
+                    request.session.pop(key, None)
+                
+                messages.success(request, 'Password reset successfully! Please login.')
+                return redirect('accounts:login')
+            except ValidationError as e:
+                for error in e.messages:
+                    messages.error(request, error)
+    return render(request, 'accounts/reset_password.html', {
+        'page_title': 'Reset Password - E-RECYCLO'
+    })
+
 
 # ============================================
 # AJAX: UPDATE PROFILE PHOTO
@@ -777,3 +787,42 @@ def update_profile_photo(request):
             
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)})
+
+
+# ============================================
+# CHANGE PASSWORD (AUTHENTICATED)
+# ============================================
+
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.forms import PasswordChangeForm
+
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.error_messages['password_incorrect'] = "Your old password is incorrect. Please enter correct Password."
+
+@login_required
+def change_password_view(request):
+    """
+    Allow authenticated users to change their password securely
+    """
+    if request.method == 'POST':
+        form = CustomPasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            # This ensures the user isn't unexpectedly logged out
+            update_session_auth_hash(request, user)
+            messages.success(request, 'Your password was successfully updated! 🔒')
+            return redirect('accounts:profile')
+        else:
+            # Display form errors as messages or in template
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = CustomPasswordChangeForm(request.user)
+        
+    return render(request, 'accounts/change_password.html', {
+        'form': form,
+        'page_title': 'Change Password - E-RECYCLO'
+    })

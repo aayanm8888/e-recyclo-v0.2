@@ -152,13 +152,109 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    .char-count {
-        font-size: 10px;
-        font-weight: 800;
-        color: #94a3b8;
-        letter-spacing: 0.05em;
+    /* Flatpickr Premium Theme Customization */
+    .flatpickr-calendar {
+        background: #ffffff;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+        border: 1px solid rgba(0,0,0,0.05);
+        border-radius: 1.25rem;
+        padding: 5px;
+    }
+    .dark .flatpickr-calendar {
+        background: #1e293b;
+        border-color: rgba(255,255,255,0.05);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    }
+    .flatpickr-day.selected {
+        background: var(--accent) !important;
+        border-color: var(--accent) !important;
+        box-shadow: 0 4px 12px var(--accent-glow);
+    }
+    .flatpickr-day.today { border-color: var(--accent) !important; color: var(--accent) !important; }
+    
+    /* Month & Year Selection Header */
+    .flatpickr-months {
+        padding: 5px 12px !important;
+        background: #f8fafc;
+        border-radius: 12px 12px 0 0;
+        border-bottom: 1px solid rgba(0,0,0,0.04);
+    }
+    .dark .flatpickr-months { background: #0f172a; border-bottom-color: rgba(255,255,255,0.05); }
+
+    .flatpickr-current-month {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        padding: 0 !important;
+        height: auto !important;
+        position: static !important;
+        width: auto !important;
+    }
+
+    .flatpickr-monthDropdown-months {
+        font-weight: 900 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px;
+        color: #1e293b !important;
+        background: rgba(0,0,0,0.03) !important;
+        border: none !important;
+        padding: 4px 22px 4px 8px !important;
+        appearance: none !important;
+        -webkit-appearance: none;
+        cursor: pointer;
+        font-size: 13px !important;
+        border-radius: 8px !important;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='14px' viewBox='0 -960 960 960' width='14px' fill='%2317cf17'%3E%3Cpath d='M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z'/%3E%3C/svg%3E") !important;
+        background-repeat: no-repeat !important;
+        background-position: right 4px center !important;
+        outline: none !important;
+    }
+    .dark .flatpickr-monthDropdown-months { color: #f1f5f9 !important; background: rgba(255,255,255,0.05) !important; }
+    .flatpickr-monthDropdown-months:focus { outline: none !important; box-shadow: none !important; }
+
+    .numInputWrapper {
+        width: 75px !important;
+        background: rgba(0,0,0,0.03) !important;
+        border-radius: 8px;
+        padding: 2px 0;
+        position: relative;
+    }
+    .numInputWrapper span { display: none !important; } /* Hidden tacky arrows */
+    .dark .numInputWrapper { background: rgba(255,255,255,0.05) !important; }
+
+    .numInput.cur-year {
+        font-weight: 900 !important;
+        color: #64748b !important;
+        font-size: 13px !important;
+        background: transparent !important;
+        border: none !important;
+        pointer-events: auto !important;
+    }
+    .dark .numInput.cur-year { color: #94a3b8 !important; }
+
+    .flatpickr-weekday { font-weight: 900 !important; color: #94a3b8 !important; font-size: 9px !important; text-transform: uppercase !important; padding-top: 10px !important; }
+    .flatpickr-day.today { color: var(--accent) !important; font-weight: 900 !important; border-color: var(--accent) !important; }
+    
+    .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+        color: var(--accent);
+        fill: var(--accent);
+        padding: 5px;
+        transition: all 0.3s;
+    }
+    .flatpickr-months .flatpickr-prev-month:hover, .flatpickr-months .flatpickr-next-month:hover {
+        background: var(--accent-glow);
+        border-radius: 10px;
+        color: var(--accent);
+    }
+    
+    .f-input.flatpickr-input {
+        cursor: pointer;
+        background-color: #ffffff !important;
     }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 {% endblock %}
 
 {% block page_content %}
@@ -201,7 +297,7 @@
             <div>
                 <label class="f-label">Account Email</label>
                 <div class="relative">
-                    <input type="email" value="{{ user.email }}" class="f-input cursor-default focus:border-red-500/0 focus:ring-0 !bg-slate-100 dark:!bg-slate-800/50" readonly>
+                    <input type="email" value="{{ user.email }}" class="f-input cursor-default pointer-events-none focus:border-red-500/0 focus:ring-0 !bg-slate-100 dark:!bg-slate-800/50" style="color: #94a3b8;" readonly tabindex="-1">
                     <div class="absolute inset-y-0 right-5 flex items-center pointer-events-none">
                         <span class="material-symbols-outlined text-slate-400 text-sm">lock</span>
                     </div>
@@ -226,8 +322,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="f-label">Date of Birth</label>
-                    <input type="date" name="date_of_birth" value="{{ user.client_profile.date_of_birth|date:'Y-m-d' }}" class="f-input">
+                    <label class="f-label">Birth Date</label>
+                    <input type="text" name="date_of_birth" id="dobField" value="{{ user.client_profile.date_of_birth|date:'Y-m-d' }}" class="f-input" placeholder="Select Date">
                 </div>
             </div>
 
@@ -235,7 +331,7 @@
             <div class="input-wrapper">
                 <div class="flex justify-between items-center mb-3">
                     <label class="f-label !mb-0">Permanent Address</label>
-                    <span class="char-count"><span id="cCount" class="text-primary font-black">0</span>/250</span>
+                    <span class="char-count text-[11px]"><span id="cCount" class="text-primary font-black">0</span>/200</span>
                 </div>
                 <textarea 
                     id="addrField"
@@ -309,11 +405,23 @@
         if (field) {
             const update = () => {
                 count.innerText = field.value.length;
-                field.style.borderColor = field.value.length >= 240 ? '#ef4444' : '';
+                field.style.borderColor = field.value.length >= 200 ? '#ef4444' : '';
             };
             field.addEventListener('input', update);
             update();
         }
     })();
+
+    // Premium Date Picker Initialization
+    flatpickr("#dobField", {
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "F j, Y",
+        animate: true,
+        disableMobile: "true",
+        onOpen: function(selectedDates, dateStr, instance) {
+            instance.calendarContainer.classList.add('animate-in', 'fade-in', 'zoom-in-95', 'duration-200');
+        }
+    });
 </script>
 {% endblock %}

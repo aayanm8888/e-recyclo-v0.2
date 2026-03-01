@@ -31,6 +31,7 @@ urlpatterns = [
     # Profile
     path('profile/', views.profile_view, name='profile'),
     path('profile/edit/', views.edit_profile_view, name='edit_profile'),
+    path('change-password/', views.change_password_view, name='change_password'),
     
     # AJAX
     path('check-username/', views.check_username_view, name='check_username'),

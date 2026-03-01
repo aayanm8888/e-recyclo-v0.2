@@ -84,6 +84,10 @@ def dashboard(request):
         status__in=['pending', 'assigned', 'accepted']
     ).count()
     
+    # Calculate more impressive Eco Impact metrics
+    co2_offset = round(float(items_recycled) * 2.45, 1) # Estimated 2.45kg CO2 per device
+    impact_score = (items_recycled * 10) + (total_points // 5)
+    
     context = {
         'page_title': 'Client Dashboard - E-RECYCLO',
         'total_uploads': total_uploads,
@@ -94,6 +98,8 @@ def dashboard(request):
         'total_points': total_points,
         'current_tier': current_tier,
         'items_recycled': items_recycled,
+        'co2_offset': co2_offset,
+        'impact_score': impact_score,
         'recent_uploads': recent_uploads,
         'pending_items': pending_items,
     }
