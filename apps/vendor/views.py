@@ -527,8 +527,10 @@ def accepted_items(request):
         'transferred': transferred_count,
     }
     
-    # Pass transferred item IDs so template can identify them
+    # Pass transferred item IDs and set attribute on objects for template convenience
     transferred_ids = list(transferred_items.values_list('pk', flat=True))
+    for item in items:
+        item.is_transferred = item.pk in transferred_ids or tab == 'transferred'
     
     return render(request, 'vendor/accepted_items.html', {
         'items': items, 
@@ -560,15 +562,29 @@ def item_detail(request, pk):
         messages.error(request, 'Access denied.')
         return redirect('vendor:accepted_items')
     
-    # Build vendor-wise history (similar to client view)
+    # Build vendor-wise history (Fixed repetition issue)
     vendor_history = []
-    unique_vendors = all_history.values_list('vendor', flat=True).distinct()
+    seen_vids = set()
+    ordered_vids = []
     
-    vendor_order = 1
-    for vendor_id in unique_vendors:
-        if vendor_id is None:
-            continue
-        
+    # Extract unique vendors in chronological order of evaluation
+    for eh in all_history:
+        if eh.vendor_id and eh.vendor_id not in seen_vids:
+            seen_vids.add(eh.vendor_id)
+            ordered_vids.append(eh.vendor_id)
+    
+    # Ensure current vendor is included if they haven't evaluated yet
+    if post.vendor_id and post.vendor_id not in seen_vids:
+        ordered_vids.append(post.vendor_id)
+
+    # Find the logged-in user's position in the vendor sequence
+    my_sequence_index = 0
+    for idx, vid in enumerate(ordered_vids, 1):
+        if vid == request.user.pk:
+            my_sequence_index = idx
+            break
+
+    for i, vendor_id in enumerate(ordered_vids, 1):
         try:
             vendor = Account.objects.get(pk=vendor_id)
         except Account.DoesNotExist:
@@ -592,8 +608,12 @@ def item_detail(request, pk):
         else:
             final_status = 'transferred'
         
+        # Privacy Logic: View own records + all past records. 
+        # Current vendor sees everything. Previous vendors can't see future transfers.
+        can_view_evals = is_current_vendor or (i <= my_sequence_index)
+        
         vendor_history.append({
-            'order': vendor_order,
+            'order': i,
             'vendor': vendor,
             'is_this_vendor': is_this_vendor,
             'is_current': is_vendor_current,
@@ -602,9 +622,99 @@ def item_detail(request, pk):
             'rejected_offers': rejected_offers,
             'accepted_offer': accepted_offer,
             'final_status': final_status,
+            'can_view_evaluations': can_view_evals,
         })
-        vendor_order += 1
     
+    # Reverse for UI (Match client's upload_detail: Newest at top)
+    vendor_history.reverse()
+    
+    # Build Collector History (Synchronized with client view)
+    collector_history = []
+    pickups = CollectorPickup.objects.filter(photo_post=post).select_related('collector').order_by('created_at')
+    
+    # We need vendors in chronological order to determine transfer addresses
+    unique_vids = []
+    for vid in all_history.values_list('vendor_id', flat=True):
+        if vid and vid not in unique_vids:
+            unique_vids.append(vid)
+    if post.vendor_id and post.vendor_id not in unique_vids:
+        unique_vids.append(post.vendor_id)
+
+    vendor_objs = []
+    for vid in unique_vids:
+        try:
+            v = Account.objects.get(pk=vid)
+            vendor_objs.append(v)
+        except: continue
+
+    for i, p in enumerate(pickups, 1):
+        c_type = "Primary Pickup"
+        pickup_name = "Pickup From Client"
+        pickup_addr = post.address
+        pickup_coords = {'lat': post.latitude, 'long': post.longitude}
+        delivery_name = "Deliver To Vendor"
+        delivery_addr = "N/A"
+        delivery_coords = {'lat': 0, 'long': 0}
+        
+        is_return = False
+        if post.status in ['return_requested', 'return_pickup_scheduled', 'return_in_transit', 'returned_to_client'] and i == len(pickups) and i > 1:
+            is_return = True
+        elif post.return_collector and p.collector == post.return_collector:
+            is_return = True
+
+        if is_return:
+            c_type = "Return Shipment"
+            if post.vendor and hasattr(post.vendor, 'vendor_profile'):
+                pickup_name = "Pickup From Vendor"
+                pickup_addr = post.vendor.vendor_profile.business_address
+                pickup_coords = {'lat': post.vendor.vendor_profile.latitude, 'long': post.vendor.vendor_profile.longitude}
+            else:
+                pickup_name = "Pickup From Vendor"
+                pickup_addr = "Vendor Facility"
+            delivery_name = "Deliver To Client"
+            delivery_addr = post.address
+            delivery_coords = {'lat': post.latitude, 'long': post.longitude}
+        elif i > 1:
+            c_type = "Transfer Shipment"
+            try:
+                prev_v = vendor_objs[i-2]
+                curr_v = vendor_objs[i-1]
+                pickup_name = "Pickup From Previous Vendor"
+                pickup_addr = prev_v.vendor_profile.business_address
+                pickup_coords = {'lat': prev_v.vendor_profile.latitude, 'long': prev_v.vendor_profile.longitude}
+                delivery_name = "Deliver To New Vendor"
+                delivery_addr = curr_v.vendor_profile.business_address
+                delivery_coords = {'lat': curr_v.vendor_profile.latitude, 'long': curr_v.vendor_profile.longitude}
+            except:
+                pickup_name = "Pickup From Previous Vendor"
+                pickup_addr = "Previous Facility Unknown"
+                delivery_name = "Deliver To New Vendor"
+                delivery_addr = "New Facility Unknown"
+        else:
+            target_v = vendor_objs[0] if vendor_objs else post.vendor
+            if target_v and hasattr(target_v, 'vendor_profile'):
+                delivery_name = "Deliver To Vendor"
+                delivery_addr = target_v.vendor_profile.business_address
+                delivery_coords = {'lat': target_v.vendor_profile.latitude, 'long': target_v.vendor_profile.longitude}
+
+        collector_history.append({
+            'order': i,
+            'collector': p.collector,
+            'status': p.get_status_display(),
+            'type': c_type,
+            'pickup_name': pickup_name,
+            'pickup_address': pickup_addr,
+            'pickup_lat': pickup_coords['lat'],
+            'pickup_long': pickup_coords['long'],
+            'delivery_name': delivery_name,
+            'delivery_address': delivery_addr,
+            'delivery_lat': delivery_coords['lat'],
+            'delivery_long': delivery_coords['long'],
+            'date': p.completed_at or p.created_at,
+            'is_completed': p.status == 'completed'
+        })
+    collector_history.reverse()
+
     # Get this vendor's stats
     my_history = all_history.filter(vendor=request.user).order_by('evaluated_at')
     total_offers = my_history.count()
@@ -623,18 +733,74 @@ def item_detail(request, pk):
             transaction_status = 'active'
     else:
         transaction_status = 'transferred'
-    
-    return render(request, 'vendor/item_detail.html', {
+
+    context = {
         'post': post, 
         'history': my_history,
         'vendor_history': vendor_history,
+        'collector_history': collector_history,
         'is_current_vendor': is_current_vendor,
         'was_previous_vendor': was_previous_vendor and not is_current_vendor,
         'total_offers': total_offers,
         'rejected_offers': rejected_offers,
         'accepted_offer': accepted_offer,
         'transaction_status': transaction_status,
-    })
+        'collector_status_tag': "Delivered" if post.status in ['collected', 'under_review', 'completed'] else "In Transit",
+    }
+
+    # Generate Situational Description for Vendor (CTC)
+    status_msg = "Item is being processed."
+    s = post.status
+    
+    if not is_current_vendor:
+        # Perspective of a previous vendor during the transfer process
+        if s in ['assigned', 'accepted']:
+            status_msg = "Client requested transfer, looking for nearby collector."
+        elif s == 'pickup_scheduled':
+            status_msg = "Pickup is scheduled. Exchange OTP along with item for transfer."
+        elif s == 'in_transit':
+            status_msg = "Collector is in-transit to transfer your item to new vendor."
+        elif s in ['collected', 'under_review', 'completed', 'returned_to_client']:
+            status_msg = "Transferred to new vendor. You have no more access to the item."
+        else:
+            status_msg = "Transferred to another facility."
+    else:
+        # Perspective of the currently assigned vendor
+        is_transfer_proc = len(ordered_vids) > 1
+        
+        if s == 'assigned': 
+            status_msg = "You have been assigned this item. We are now arranging a collector for pickup." if not is_transfer_proc else "You have been assigned this item. We are now arranging a transfer from the previous vendor."
+        elif s == 'accepted': 
+            status_msg = "Assignment confirmed. A logistics partner is being matched for pickup." if not is_transfer_proc else "Assignment confirmed. Arranging a collector to pick up the item from the previous vendor."
+        elif s == 'pickup_scheduled':
+            if post.collector:
+                col_name = post.collector.get_full_name()
+                if is_transfer_proc:
+                    status_msg = f"Transfer scheduled. Collector {col_name} is en-route to pick up the item from the previous vendor's facility."
+                else:
+                    status_msg = f"Pickup scheduled. Collector {col_name} is en-route to the client address."
+            else:
+                status_msg = "Recycling request accepted. Searching for a nearby collector to initiate pickup."
+        elif s == 'in_transit': 
+            status_msg = "The item is safely in transit and heading to your facility for technical inspection."
+        elif s == 'collected':
+            if post.vendor_declined_reevaluation:
+                status_msg = "You have declined the re-evaluation request. Awaiting client's choice to accept the last offer or request a return."
+            elif post.rejection_count and post.rejection_count > 0:
+                status_msg = "Re-evaluation requested! Please review the client's expected price and remarks to provide a revised offer."
+            else:
+                status_msg = "Item delivered! Please perform a deep technical inspection and provide your official evaluation offer."
+        elif s == 'under_review':
+            status_msg = "Your evaluation offer has been sent to the client. You will be notified once they accept or request adjustments."
+        elif s == 'return_requested': status_msg = "Client requested a return. We are matching a collector to return the item from your facility."
+        elif s == 'return_pickup_scheduled': status_msg = "A collector is en-route to your facility to pick up the item for client return."
+        elif s == 'return_in_transit': status_msg = "The item has been picked up from your facility and is being delivered back to the client."
+        elif s == 'returned_to_client': status_msg = "The item has been successfully returned to the client's registered address."
+        elif s == 'completed': status_msg = "Process complete! The item has been successfully recycled. Transaction logs are now finalized."
+        elif s == 'rejected': status_msg = "This request was canceled or rejected."
+
+    context['status_msg'] = status_msg
+    return render(request, 'vendor/item_detail.html', context)
 
 
 @login_required

@@ -111,102 +111,49 @@
     {% if items %}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
         {% for item in items %}
-        
-        {% if is_transferred_tab or item.pk in transferred_ids %}
-        <!-- ── TRANSFERRED ITEMS CARD (Adopts Client Style but de-emphasized) ── -->
-        <div class="premium-card overflow-hidden group opacity-70 hover:opacity-100 transition-opacity">
-            <div class="flex flex-col sm:flex-row items-stretch min-h-[300px]">
-                <!-- IMAGE SIDE -->
-                <div class="sm:w-[35%] p-6 pr-0 flex flex-col items-center justify-center gap-5">
-                    <div class="size-44 rounded-[1.2rem] overflow-hidden bg-white dark:bg-slate-900 shadow-inner p-2.5 border border-slate-100 dark:border-slate-800 shrink-0">
-                        {% if item.photo %}
-                        <img src="{{ item.photo.url }}" alt="{{ item.title }}"
-                             class="w-full h-full object-cover rounded-[1rem] grayscale group-hover:grayscale-0 transition-all duration-700">
-                        {% else %}
-                        <div class="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
-                            <span class="material-symbols-outlined text-4xl">swap_horiz</span>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- CONTENT SIDE -->
-                <div class="flex-1 p-8 pl-4 flex flex-col justify-between text-slate-400">
-                    <div>
-                        <div class="flex items-start justify-between gap-4 mb-4">
-                            <div class="flex-1 min-w-0">
-                                <h3 class="text-base sm:text-lg font-extrabold text-slate-400 dark:text-slate-500 leading-tight transition-colors truncate mb-1">{{ item.title }}</h3>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Asset #{{ item.pk }} · Transferred</p>
-                            </div>
-                            <div class="shrink-0 flex items-center h-7">
-                                <span class="status-badge bg-slate-100 text-slate-500 dark:bg-slate-800 py-1 px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-lg leading-none whitespace-nowrap">
-                                    OUTBOUND
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Meta Flow -->
-                        <div class="flex gap-4 sm:gap-6 mt-4 mb-8 border-y border-slate-50 dark:border-slate-800/50 py-4">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-[8px] font-bold text-slate-300 uppercase tracking-widest mb-1.5 leading-none">Qty</p>
-                                <p class="text-[10px] sm:text-[11px] font-black text-slate-400 dark:text-slate-500">{{ item.quantity }} Unit</p>
-                            </div>
-                            <div class="flex-[1.5] min-w-0">
-                                <p class="text-[8px] font-bold text-slate-300 uppercase tracking-widest mb-1.5 leading-none">Category</p>
-                                <p class="text-[10px] sm:text-[11px] font-black text-slate-400 dark:text-slate-500 truncate">{{ item.get_ai_category_display }}</p>
-                            </div>
-                            <div class="flex-[1.5] min-w-0">
-                                <p class="text-[8px] font-bold text-slate-300 uppercase tracking-widest mb-1.5 leading-none">New Holder</p>
-                                <p class="text-[10px] sm:text-[11px] font-black text-slate-400 dark:text-slate-500 truncate">{{ item.vendor.get_full_name|default:"Searching..." }}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
-                        <div class="flex-1 min-w-0">
-                             <p class="text-[8px] text-slate-300 font-extrabold uppercase tracking-widest mb-1 truncate italic">Access Restricted</p>
-                        </div>
-                        <a href="{% url 'vendor:item_detail' item.pk %}" 
-                           class="shrink-0 py-3 px-6 sm:px-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all">
-                            History
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {% else %}
-        <!-- ── ACTIVE CURRENT ITEMS CARD (Matches Client Style) ── -->
+        <!-- ── UNIFIED ITEM CARD ── -->
         <div class="premium-card overflow-hidden group">
             <div class="flex flex-col sm:flex-row items-stretch min-h-[300px]">
                 <!-- IMAGE SIDE -->
                 <div class="sm:w-[35%] p-6 pr-0 flex flex-col items-center justify-center gap-5">
-                    <div class="size-44 rounded-[1.2rem] overflow-hidden bg-white dark:bg-slate-900 shadow-inner p-2.5 border border-slate-100 dark:border-slate-800 shrink-0">
+                    <div class="size-44 rounded-[1.2rem] overflow-hidden bg-white dark:bg-slate-900 shadow-inner p-2.5 border border-slate-100 dark:border-slate-800 shrink-0 relative">
                         {% if item.photo %}
                         <img src="{{ item.photo.url }}" alt="{{ item.title }}"
                              class="w-full h-full object-cover rounded-[1rem] group-hover:scale-105 transition-transform duration-700">
                         {% else %}
                         <div class="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
-                            <span class="material-symbols-outlined text-4xl">devices</span>
+                            <span class="material-symbols-outlined text-4xl">{% if item.is_transferred %}swap_horiz{% else %}devices{% endif %}</span>
+                        </div>
+                        {% endif %}
+
+                        {% if item.is_transferred %}
+                        <!-- Transferred Indicator Over Image -->
+                        <div class="absolute top-4 left-4">
+                            <span class="bg-amber-500 text-white text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-amber-500/30 uppercase tracking-tighter">
+                                <span class="material-symbols-outlined text-[10px]">move_up</span>
+                                Transferred
+                            </span>
                         </div>
                         {% endif %}
                     </div>
 
-                    <!-- OTP Info / Context (Beneath image) -->
-                    {% if item.status == 'in_transit' and item.delivery_otp and item.collector %}
-                    <div class="w-full px-4">
-                        <div class="p-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 rounded-xl flex items-center justify-between">
-                            <span class="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Delivery OTP</span>
-                            <span class="text-xs font-black text-emerald-700 dark:text-emerald-300 tracking-[0.1em] font-mono leading-none">{{ item.delivery_otp }}</span>
+                    <!-- OTP Info (Only for Active) -->
+                    {% if not item.is_transferred %}
+                        {% if item.status == 'in_transit' and item.delivery_otp and item.collector %}
+                        <div class="w-full px-4">
+                            <div class="p-2 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 rounded-xl flex items-center justify-between">
+                                <span class="text-[8px] font-black text-emerald-600 uppercase tracking-widest">Delivery OTP</span>
+                                <span class="text-xs font-black text-emerald-700 dark:text-emerald-300 tracking-[0.1em] font-mono leading-none">{{ item.delivery_otp }}</span>
+                            </div>
                         </div>
-                    </div>
-                    {% elif item.status == 'return_pickup_scheduled' and item.return_pickup_otp %}
-                    <div class="w-full px-4">
-                        <div class="p-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 rounded-xl flex items-center justify-between">
-                            <span class="text-[8px] font-black text-amber-600 uppercase tracking-widest">Return OTP</span>
-                            <span class="text-xs font-black text-amber-700 dark:text-amber-300 tracking-[0.1em] font-mono leading-none">{{ item.return_pickup_otp }}</span>
+                        {% elif item.status == 'return_pickup_scheduled' and item.return_pickup_otp %}
+                        <div class="w-full px-4">
+                            <div class="p-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 rounded-xl flex items-center justify-between">
+                                <span class="text-[8px] font-black text-amber-600 uppercase tracking-widest">Return OTP</span>
+                                <span class="text-xs font-black text-amber-700 dark:text-amber-300 tracking-[0.1em] font-mono leading-none">{{ item.return_pickup_otp }}</span>
+                            </div>
                         </div>
-                    </div>
+                        {% endif %}
                     {% endif %}
                 </div>
 
@@ -216,88 +163,140 @@
                         <div class="flex items-start justify-between gap-4 mb-4">
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white leading-tight group-hover:text-primary transition-colors truncate mb-1">{{ item.title }}</h3>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Post #{{ item.pk }} · Client: {{ item.user.get_full_name }}</p>
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                                    {% if item.is_transferred %}Asset #{{ item.pk }} · Transferred Out{% else %}Post #{{ item.pk }} · Client: {{ item.user.get_full_name }}{% endif %}
+                                </p>
                             </div>
                             <div class="shrink-0 flex items-center h-7">
-                                <span class="status-badge bg-primary/10 text-primary border border-primary/20 py-1 px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-lg leading-none whitespace-nowrap">
-                                    {{ item.get_status_display }}
+                                {% if item.is_transferred %}
+                                <span class="status-badge bg-amber-50 text-amber-600 border border-amber-100 py-1 px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-lg leading-none whitespace-nowrap">
+                                    TRANSFERED
                                 </span>
+                                {% else %}
+                                <span class="status-badge {{ item.get_status_badge_pilled_class }} py-1 px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-lg leading-none whitespace-nowrap">
+                                    {{ item.get_vendor_status_tag }}
+                                </span>
+                                {% endif %}
                             </div>
                         </div>
 
-                        <!-- Status Alert (Equivalent to Description) -->
+                        <!-- Description / Status Detail -->
                         <div class="mb-6">
-                            {% if item.status == 'under_review' %}
-                                <p class="text-[11px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[14px]">history_edu</span> Offer Under client review
-                                </p>
-                            {% elif item.status == 'collected' %}
-                                <p class="text-[11px] text-primary font-black uppercase tracking-widest flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[14px]">fact_check</span> Ready for valuation
+                            {% if item.is_transferred %}
+                                <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-[14px]">output</span> Handed to <span class="text-slate-800 dark:text-slate-200">{{ item.vendor.get_full_name|default:"Partner Facility" }}</span>
                                 </p>
                             {% else %}
-                                <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Logistics in progress
-                                </p>
+                                {% if item.status == 'under_review' %}
+                                    <p class="text-[11px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[14px]">history_edu</span> Offer Under client review
+                                    </p>
+                                {% elif item.status == 'collected' %}
+                                    <p class="text-[11px] text-primary font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[14px]">fact_check</span> Ready {% if item.vendor_final_value %}for Re-valuation{% else %}for Valuation{% endif %}
+                                    </p>
+                                {% elif item.status == 'completed' %}
+                                    <p class="text-[11px] text-emerald-600 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[14px]">check_circle</span> Asset processed successfully
+                                    </p>
+                                {% elif item.status == 'returned_to_client' %}
+                                    <p class="text-[11px] text-teal-600 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[14px]">keyboard_return</span> Returned to customer
+                                    </p>
+                                {% elif item.status == 'pickup_scheduled' %}
+                                    <p class="text-[11px] text-blue-600 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[14px]">schedule</span> Pickup Scheduled - Awaiting Pickup
+                                    </p>
+                                {% elif item.status == 'in_transit' %}
+                                    <p class="text-[11px] text-orange-600 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[14px]">local_shipping</span> Asset in transit - heading to you
+                                    </p>
+                                {% else %}
+                                    <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-1.5">
+                                        <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Logistics in progress
+                                    </p>
+                                {% endif %}
                             {% endif %}
                         </div>
 
-                        <!-- Meta Flow -->
+                        <!-- Meta Flow (Specs) -->
                         <div class="flex gap-4 sm:gap-6 mt-4 mb-8 border-y border-slate-50 dark:border-slate-800/50 py-4">
                             <div class="flex-1 min-w-0">
                                 <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Qty</p>
                                 <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200">{{ item.quantity }} Unit</p>
                             </div>
                             <div class="flex-[1.5] min-w-0">
-                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">AI Category</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Category</p>
                                 <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200 truncate">{{ item.get_ai_category_display }}</p>
                             </div>
                             <div class="flex-[1.5] min-w-0">
-                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">AI Condition</p>
+                                {% if item.is_transferred %}
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">New Holder</p>
+                                <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200 truncate">{{ item.vendor.get_full_name|default:"Searching..." }}</p>
+                                {% else %}
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Condition</p>
                                 <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200 truncate">{{ item.get_ai_condition_display }}</p>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
 
+                    <!-- Action Bar (Bottom) -->
                     <div class="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
+                        <!-- Prices Section (Left) -->
                         <div class="flex-1 min-w-0 flex items-center gap-[9px] sm:gap-[17px] pr-2">
-                            <div class="min-w-0 ml-2 -mt[4px]">
-                                <p class="text-[8px] text-slate-400 font-extrabold uppercase tracking-widest mb-1 truncate">AI Predicted</p>
-                                <p class="font-black text-slate-700 dark:text-white leading-none whitespace-nowrap text-base">
-                                    ₹{{ item.ai_estimated_value }}
-                                </p>
-                            </div>
-                            {% if item.vendor_final_value %}
-                            <div class="min-w-0 border-l border-slate-100 dark:border-slate-800/50 pl-3 sm:pl-4">
-                                <p class="text-[8px] text-primary font-extrabold uppercase tracking-widest mb-1 truncate">
-                                    Your Offer
-                                </p>
-                                <p class="font-black text-primary leading-none whitespace-nowrap text-base">
-                                    ₹{{ item.vendor_final_value }}
-                                </p>
-                            </div>
+                            {% if item.status == 'completed' or item.status == 'returned_to_client' or item.is_transferred %}
+                                <!-- Final State: Show Final Price -->
+                                <div class="min-w-0 ml-2">
+                                    <p class="text-[8px] text-slate-400 font-extrabold uppercase tracking-widest mb-1 truncate">AI Predicted</p>
+                                    <p class="font-black text-slate-700 dark:text-white leading-none whitespace-nowrap text-base">₹{{ item.ai_estimated_value }}</p>
+                                </div>
+                                {% if item.vendor_final_value %}
+                                <div class="min-w-0 border-l border-slate-100 dark:border-slate-800/50 pl-3 sm:pl-4">
+                                    <p class="text-[8px] text-primary font-extrabold uppercase tracking-widest mb-1 truncate">Final Price</p>
+                                    <p class="font-black text-primary leading-none whitespace-nowrap text-base">₹{{ item.vendor_final_value }}</p>
+                                </div>
+                                {% endif %}
+                            {% else %}
+                                <!-- Active Lifecycle State -->
+                                <div class="min-w-0 ml-2">
+                                    <p class="text-[8px] text-slate-400 font-extrabold uppercase tracking-widest mb-1 truncate">AI Predicted</p>
+                                    <p class="font-black text-slate-700 dark:text-white leading-none whitespace-nowrap text-base">₹{{ item.ai_estimated_value }}</p>
+                                </div>
+                                {% if item.vendor_final_value %}
+                                <div class="min-w-0 border-l border-slate-100 dark:border-slate-800/50 pl-3 sm:pl-4">
+                                    <p class="text-[8px] text-primary font-extrabold uppercase tracking-widest mb-1 truncate">
+                                        {% if item.offer_count == 1 %}1st Price
+                                        {% elif item.offer_count == 2 %}2nd Price
+                                        {% elif item.offer_count >= 3 %}{{ item.offer_count }}rd Price
+                                        {% else %}Current Offer{% endif %}
+                                    </p>
+                                    <p class="font-black text-primary leading-none whitespace-nowrap text-base">₹{{ item.vendor_final_value }}</p>
+                                </div>
+                                {% endif %}
                             {% endif %}
                         </div>
 
+                        <!-- Buttons Section (Right) -->
                         <div class="flex items-center gap-2">
-                            {% if item.status == 'collected' and not item.vendor_declined_reevaluation %}
-                            <a href="{% url 'vendor:evaluate_item' item.pk %}" 
-                               class="shrink-0 py-3 px-6 sm:px-8 rounded-xl bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20">
-                                Evaluate
-                            </a>
-                            {% else %}
+                            <!-- Details Button (Always Present) -->
                             <a href="{% url 'vendor:item_detail' item.pk %}" 
                                class="shrink-0 py-3 px-6 sm:px-8 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-slate-900/10">
                                 Details
                             </a>
+
+                            <!-- Evaluation/Re-evaluation Action -->
+                            {% if item.status == 'collected' and not item.vendor_declined_reevaluation %}
+                                <a href="{% url 'vendor:evaluate_item' item.pk %}" 
+                                   class="shrink-0 py-3 px-6 sm:px-8 rounded-xl bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20">
+                                    {% if item.rejection_count > 0 %}Re-evaluate{% else %}Evaluate{% endif %}
+                                </a>
                             {% endif %}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
-        
         {% endfor %}
     </div>
 

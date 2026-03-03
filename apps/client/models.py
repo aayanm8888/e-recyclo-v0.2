@@ -339,6 +339,29 @@ class PhotoPost(models.Model):
             
         return tag
 
+    def get_vendor_status_tag(self):
+        """Standardized status tag for vendor-side display"""
+        s = self.status
+        tag = self.get_status_display().upper()
+        
+        if s == 'under_review': 
+            tag = "SENT TO CLIENT"
+        elif s == 'collected':
+            if self.vendor_declined_reevaluation:
+                tag = "CLIENT ACTION PENDING"
+            elif self.rejection_count and self.rejection_count > 0:
+                tag = "RE-VALUATION READY"
+            else:
+                tag = "VALUATION READY"
+        elif s == 'pickup_scheduled':
+            tag = "AWAITING PICKUP" if not self.collector_id else "COLLECTOR ASSIGNED"
+        elif s == 'in_transit':
+            tag = "HEADING TO YOU"
+        elif s == 'completed':
+            tag = "PROCESSED"
+            
+        return tag
+
 
 # ============================================
 # BULK PICKUP MODEL
