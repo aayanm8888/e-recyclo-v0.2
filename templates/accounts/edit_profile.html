@@ -180,6 +180,10 @@
         border-bottom: 1px solid rgba(0,0,0,0.04);
     }
     .dark .flatpickr-months { background: #0f172a; border-bottom-color: rgba(255,255,255,0.05); }
+    
+    .flatpickr-calendar, .flatpickr-innerContainer, .flatpickr-months, .flatpickr-month, .flatpickr-current-month {
+        overflow: visible !important;
+    }
 
     .flatpickr-current-month {
         display: flex !important;
@@ -192,26 +196,70 @@
         width: auto !important;
     }
 
-    .flatpickr-monthDropdown-months {
+    .flatpickr-current-month .cur-month {
         font-weight: 900 !important;
         text-transform: uppercase !important;
         letter-spacing: 0.5px;
         color: #1e293b !important;
         background: rgba(0,0,0,0.03) !important;
-        border: none !important;
         padding: 4px 22px 4px 8px !important;
-        appearance: none !important;
-        -webkit-appearance: none;
+        border-radius: 8px !important;
         cursor: pointer;
         font-size: 13px !important;
-        border-radius: 8px !important;
+        margin-right: 4px !important;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' height='14px' viewBox='0 -960 960 960' width='14px' fill='%2317cf17'%3E%3Cpath d='M480-345 240-585l56-56 184 184 184-184 56 56-240 240Z'/%3E%3C/svg%3E") !important;
         background-repeat: no-repeat !important;
         background-position: right 4px center !important;
-        outline: none !important;
+        display: inline-block !important;
+        transition: all 0.2s ease;
     }
-    .dark .flatpickr-monthDropdown-months { color: #f1f5f9 !important; background: rgba(255,255,255,0.05) !important; }
-    .flatpickr-monthDropdown-months:focus { outline: none !important; box-shadow: none !important; }
+    .flatpickr-current-month .cur-month:hover { background-color: rgba(23, 207, 23, 0.08) !important; }
+    .dark .flatpickr-current-month .cur-month { color: #f1f5f9 !important; background: rgba(255,255,255,0.05) !important; }
+    
+    /* Month Menu Style */
+    .flatpickr-month-menu {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background-color: #ffffff !important;
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,0.1);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        z-index: 999999 !important;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 150px;
+        max-height: 300px;
+        overflow-y: auto;
+        padding: 8px;
+    }
+    .flatpickr-month-menu.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    .dark .flatpickr-month-menu { background-color: #1e293b !important; border-color: rgba(255,255,255,0.1); }
+    
+    .flatpickr-months { 
+        z-index: 500 !important; 
+        position: relative !important;
+        background: #f8fafc !important; /* Force solid header bg */
+    }
+    .dark .flatpickr-months { background: #0f172a !important; }
+    
+    .month-item {
+        padding: 10px 12px;
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: #64748b;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+        text-align: center;
+    }
+    .month-item:hover { background: #f0faf0; color: var(--accent); }
+    .dark .month-item:hover { background: #0f172a; }
+    .month-item.active { background: var(--accent); color: white; }
 
     .numInputWrapper {
         width: 75px !important;
@@ -225,13 +273,55 @@
 
     .numInput.cur-year {
         font-weight: 900 !important;
-        color: #64748b !important;
+        color: #1e293b !important;
         font-size: 13px !important;
-        background: transparent !important;
+        background: rgba(0,0,0,0.03) !important;
         border: none !important;
-        pointer-events: auto !important;
+        padding: 4px 12px !important;
+        border-radius: 8px !important;
+        cursor: pointer;
+        width: 70px !important;
+        outline: none !important;
+        transition: all 0.2s ease;
     }
-    .dark .numInput.cur-year { color: #94a3b8 !important; }
+    .numInput.cur-year:hover { background-color: rgba(23, 207, 23, 0.08) !important; color: var(--accent) !important; }
+    .dark .numInput.cur-year { color: #f1f5f9 !important; background: rgba(255,255,255,0.05) !important; }
+
+    /* Year Menu Style */
+    .flatpickr-year-menu {
+        position: absolute;
+        top: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(10px);
+        background-color: #ffffff !important;
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,0.1);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        z-index: 999999 !important;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 100px;
+        max-height: 250px;
+        overflow-y: auto;
+        padding: 8px;
+    }
+    .flatpickr-year-menu.show { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); }
+    .dark .flatpickr-year-menu { background-color: #1e293b !important; border-color: rgba(255,255,255,0.1); }
+    
+    .year-item {
+        padding: 10px 12px;
+        font-size: 11px;
+        font-weight: 800;
+        color: #64748b;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.2s;
+        text-align: center;
+    }
+    .year-item:hover { background: #f0faf0; color: var(--accent); }
+    .dark .year-item:hover { background: #0f172a; }
+    .year-item.active { background: var(--accent); color: white; }
 
     .flatpickr-weekday { font-weight: 900 !important; color: #94a3b8 !important; font-size: 9px !important; text-transform: uppercase !important; padding-top: 10px !important; }
     .flatpickr-day.today { color: var(--accent) !important; font-weight: 900 !important; border-color: var(--accent) !important; }
@@ -314,11 +404,13 @@
                         <span id="selectedGenderText">Select Gender</span>
                         <span class="material-symbols-outlined text-slate-400">expand_more</span>
                     </div>
-                    <div class="sel-options" id="genderOptions">
-                        <div class="sel-option" data-value="male">MALE</div>
-                        <div class="sel-option" data-value="female">FEMALE</div>
-                        <div class="sel-option" data-value="other">OTHER</div>
-                        <div class="sel-option" data-value="prefer_not_to_say">HIDDEN</div>
+                    <div class="sel-options" id="vehicleOptions">
+                        <div class="sel-option" data-value="bike">BIKE / MOTORCYCLE</div>
+                        <div class="sel-option" data-value="scooter">SCOOTER</div>
+                        <div class="sel-option" data-value="auto">AUTO RICKSHAW</div>
+                        <div class="sel-option" data-value="van">VAN / SMALL TRUCK</div>
+                        <div class="sel-option" data-value="tempo">TEMPO / THREE WHEELER</div>
+                        <div class="sel-option" data-value="pickup">PICKUP TRUCK</div>
                     </div>
                 </div>
                 <div>
@@ -419,6 +511,91 @@
         altFormat: "F j, Y",
         animate: true,
         disableMobile: "true",
+        monthSelectorType: "static", // Custom month switcher logic
+        onReady: function(selectedDates, dateStr, instance) {
+            instance.calendarContainer.classList.add('animate-in', 'fade-in', 'zoom-in-95', 'duration-200');
+            
+            // 1. Create Custom Month Dropdown
+            const curMonth = instance.calendarContainer.querySelector('.cur-month');
+            if(!curMonth) return;
+
+            const menu = document.createElement('div');
+            menu.className = 'flatpickr-month-menu no-scrollbar';
+            
+            const months = instance.l10n.months.longhand;
+            months.forEach((m, i) => {
+                const item = document.createElement('div');
+                item.className = 'month-item' + (i === instance.currentMonth ? ' active' : '');
+                item.innerText = m;
+                item.onclick = (e) => {
+                    e.stopPropagation();
+                    instance.changeMonth(i, false);
+                    menu.classList.remove('show');
+                };
+                menu.appendChild(item);
+            });
+
+            curMonth.parentElement.style.position = 'relative';
+            curMonth.parentElement.style.zIndex = '1000';
+            curMonth.parentElement.appendChild(menu);
+
+            // 2. Toggle Logic
+            curMonth.onclick = (e) => {
+                e.stopPropagation();
+                // Close other instances if any, though here only one
+                menu.classList.toggle('show');
+            };
+
+            // 3. Update active state on change
+            instance.config.onMonthChange.push(() => {
+                menu.querySelectorAll('.month-item').forEach((it, idx) => {
+                    it.classList.toggle('active', idx === instance.currentMonth);
+                });
+            });
+
+            // 4. Global close
+            document.addEventListener('click', () => menu.classList.remove('show'));
+            // 5. Create Custom Year Dropdown
+            const curYear = instance.calendarContainer.querySelector('.numInput.cur-year');
+            if(curYear) {
+                const yearMenu = document.createElement('div');
+                yearMenu.className = 'flatpickr-year-menu no-scrollbar';
+                
+                const currentYear = new Date().getFullYear();
+                for(let y = currentYear; y >= 1950; y--) {
+                    const yItem = document.createElement('div');
+                    yItem.className = 'year-item' + (y === instance.currentYear ? ' active' : '');
+                    yItem.innerText = y;
+                    yItem.onclick = (e) => {
+                        e.stopPropagation();
+                        instance.changeYear(y);
+                        yearMenu.classList.remove('show');
+                    };
+                    yearMenu.appendChild(yItem);
+                }
+
+                curYear.parentElement.style.position = 'relative';
+                curYear.parentElement.style.zIndex = '1000';
+                curYear.parentElement.appendChild(yearMenu);
+
+                curYear.onclick = (e) => {
+                    e.stopPropagation();
+                    menu.classList.remove('show'); // close month
+                    yearMenu.classList.toggle('show');
+                };
+
+                instance.config.onYearChange.push(() => {
+                    yearMenu.querySelectorAll('.year-item').forEach((it) => {
+                        it.classList.toggle('active', parseInt(it.innerText) === instance.currentYear);
+                    });
+                    // Scroll to active year
+                    const active = yearMenu.querySelector('.year-item.active');
+                    if(active) yearMenu.scrollTop = active.offsetTop - 100;
+                });
+                
+                document.addEventListener('click', () => yearMenu.classList.remove('show'));
+            }
+        },
         onOpen: function(selectedDates, dateStr, instance) {
             instance.calendarContainer.classList.add('animate-in', 'fade-in', 'zoom-in-95', 'duration-200');
         }

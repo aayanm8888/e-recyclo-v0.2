@@ -375,6 +375,10 @@
                         <span class="material-symbols-outlined text-[18px]">settings</span>
                         Profile & Settings
                     </a>
+                    <button onclick="openProfilePicModal()" class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all">
+                        <span class="material-symbols-outlined text-[18px]">account_circle</span>
+                        View Profile Picture
+                    </button>
                     <div class="h-[1px] bg-slate-100 dark:bg-slate-800/60 my-1 mx-4"></div>
                     <a href="{% url 'accounts:logout' %}" class="flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all">
                         <span class="material-symbols-outlined text-[18px]">logout</span>
@@ -431,6 +435,25 @@ function toggleSidebar() {
     
     localStorage.setItem('sidebarCollapsed', collapsed);
 }
+
+function openProfilePicModal() {
+    const modal = document.getElementById('profilePicModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeProfilePicModal() {
+    const modal = document.getElementById('profilePicModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = 'auto';
+    }
+}
+
 function toggleDarkMode() {
     const dark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('darkMode', dark);
@@ -465,6 +488,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 5000);
 });
 </script>
+
+<!-- Profile Picture Modal -->
+<div id="profilePicModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300" onclick="if(event.target === this) closeProfilePicModal()">
+    <div class="relative max-w-lg w-full bg-white dark:bg-slate-900 rounded-[2.5rem] p-3 shadow-2xl border border-white/20 transform animate-in zoom-in duration-300">
+        <button onclick="closeProfilePicModal()" class="absolute -top-12 right-0 size-10 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full flex items-center justify-center text-white transition-all">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+        
+        <div class="aspect-square w-full rounded-[2rem] overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+            {% if user.is_vendor and user.vendor_profile.profile_photo and 'default' not in user.vendor_profile.profile_photo.url %}
+                <img src="{{ user.vendor_profile.profile_photo.url }}" class="w-full h-full object-cover">
+            {% elif user.is_collector and user.collector_profile.profile_photo and 'default' not in user.collector_profile.profile_photo.url %}
+                <img src="{{ user.collector_profile.profile_photo.url }}" class="w-full h-full object-cover">
+            {% elif user.is_client and user.client_profile.profile_photo and 'default' not in user.client_profile.profile_photo.url %}
+                <img src="{{ user.client_profile.profile_photo.url }}" class="w-full h-full object-cover">
+            {% else %}
+                <div class="size-full flex items-center justify-center bg-primary/10 text-primary text-6xl font-black italic">
+                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="p-6 text-center">
+            <h3 class="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">{{ user.get_full_name }}</h3>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">{{ user.email }}</p>
+        </div>
+    </div>
+</div>
+
 {% block extra_js %}{% endblock %}
 </body>
 </html>

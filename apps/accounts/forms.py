@@ -23,7 +23,7 @@ class RegistrationForm(forms.ModelForm):
     
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+            'class': 'w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
             'placeholder': 'Enter password',
             'id': 'password'
         }),
@@ -32,7 +32,7 @@ class RegistrationForm(forms.ModelForm):
     
     password_confirm = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+            'class': 'w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
             'placeholder': 'Confirm password',
             'id': 'password_confirm'
         }),
@@ -40,9 +40,9 @@ class RegistrationForm(forms.ModelForm):
     )
     
     USER_TYPE_CHOICES = [
-        ('client', 'Client (I want to recycle E-waste)'),
-        ('vendor', 'Vendor (I recycle the . E-waste )'),
-        ('collector', 'Collector (I collect the E-waste)'),
+        ('client', 'Client'),
+        ('vendor', 'Vendor'),
+        ('collector', 'Collector'),
     ]
     
     user_type = forms.ChoiceField(
@@ -59,27 +59,27 @@ class RegistrationForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'username', 'email', 'phone_number']
         widgets = {
             'first_name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
                 'placeholder': 'First Name',
                 'id': 'first_name'
             }),
             'last_name': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
                 'placeholder': 'Last Name',
                 'id': 'last_name'
             }),
             'username': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
                 'placeholder': 'Username (lowercase, no spaces)',
                 'id': 'username'
             }),
             'email': forms.EmailInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
                 'placeholder': 'Email Address',
                 'id': 'email'
             }),
             'phone_number': forms.TextInput(attrs={
-                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                'class': 'w-full px-4 py-2 border border-gray-300 bg-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
                 'placeholder': '10-digit mobile number',
                 'id': 'phone_number',
                 'maxlength': '10'

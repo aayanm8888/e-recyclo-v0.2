@@ -88,10 +88,11 @@ class CategoryMapper:
         if yolo_class == 'other' and image_size:
             yolo_class = cls._smart_map_other(image_size, confidence)
         
-        # Get category details
-        category_info = cls.CATEGORY_MAPPING.get(yolo_class, cls.CATEGORY_MAPPING['other'])
+        # Get category details (use copy to avoid mutating global state)
+        category_info = cls.CATEGORY_MAPPING.get(yolo_class, cls.CATEGORY_MAPPING['other']).copy()
         
         # Add metadata
+        category_info['category'] = yolo_class
         category_info['yolo_class'] = yolo_class
         category_info['confidence'] = round(confidence * 100, 2)
         category_info['ai_detected'] = True

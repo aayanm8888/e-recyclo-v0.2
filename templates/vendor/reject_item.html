@@ -1,126 +1,137 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Reject Item - E-RECYCLO{% endblock %}
+{% block title %}Reject Item - eRecyclo{% endblock %}
+{% block page_title %}Pass Asset{% endblock %}
+{% block page_subtitle %}Relinquish procurement opportunity back to the market{% endblock %}
 
-{% block content %}
-<div class="max-w-2xl mx-auto">
-    <!-- Header -->
-    <div class="mb-6">
-        <a href="{% url 'vendor:pending_requests' %}" class="inline-flex items-center text-gray-600 hover:text-green-600 mb-4">
-            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-            Back to Pending Requests
-        </a>
-        <h1 class="text-2xl font-bold text-gray-800">Reject Item</h1>
-        <p class="text-gray-600 mt-1">This item will be made available to other vendors in the area.</p>
-    </div>
+{% block extra_css %}
+<style>
+    .premium-card {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        border-radius: 1.5rem;
+    }
 
-    <!-- Item Summary Card -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
-        <div class="flex gap-4">
+    .dark .premium-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .quick-chip {
+        padding: 8px 16px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 800;
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        border-radius: 9999px;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .dark .quick-chip {
+        background: #0f172a;
+        color: #94a3b8;
+    }
+
+    .quick-chip:hover {
+        background: white;
+        color: #ef4444;
+        border-color: #ef4444;
+        box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+    }
+</style>
+{% endblock %}
+
+{% block page_content %}
+<div class="max-w-3xl mx-auto space-y-8 pb-24 px-4 sm:px-0">
+
+    <!-- ── ASSET SNAPSHOT ── -->
+    <div class="premium-card p-6 flex flex-col sm:flex-row items-center gap-6 group">
+        <div class="size-24 rounded-2xl overflow-hidden bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-1.5 shrink-0">
             {% if post.photo %}
-            <img src="{{ post.photo.url }}" alt="{{ post.title }}" class="w-24 h-24 object-cover rounded-lg">
-            {% endif %}
-            <div class="flex-1">
-                <h3 class="font-semibold text-gray-800">{{ post.title }}</h3>
-                <p class="text-sm text-gray-500 mt-1">{{ post.get_ai_category_display }}</p>
-                <div class="flex items-center gap-4 mt-2 text-sm">
-                    <span class="text-gray-600">
-                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                        </svg>
-                        {{ post.address|truncatechars:40 }}
-                    </span>
-                    {% if post.ai_estimated_value %}
-                    <span class="text-green-600 font-medium">Est. ₹{{ post.ai_estimated_value }}</span>
-                    {% endif %}
-                </div>
+            <img src="{{ post.photo.url }}" class="size-full object-cover rounded-xl opacity-60 group-hover:opacity-100 transition-opacity">
+            {% else %}
+            <div class="size-full flex items-center justify-center text-slate-300">
+                <span class="material-symbols-outlined text-3xl">devices</span>
             </div>
+            {% endif %}
+        </div>
+        <div class="flex-1 text-center sm:text-left">
+            <h3 class="text-[17px] font-black text-slate-800 dark:text-white leading-tight mb-2">{{ post.title }}</h3>
+            <div class="flex flex-wrap justify-center sm:justify-start gap-3 items-center">
+                 <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ post.get_ai_category_display }}</span>
+                 <span class="size-1 bg-slate-200 rounded-full"></span>
+                 <span class="text-[9px] font-black text-primary uppercase tracking-widest">Est. ₹{{ post.ai_estimated_value }}</span>
+            </div>
+            <p class="text-[10px] font-bold text-slate-500 mt-2 truncate max-w-sm">{{ post.address }}</p>
         </div>
     </div>
 
-    <!-- Rejection Form -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <div class="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
-            <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
+    <!-- ── REJECTION CONTEXT ── -->
+    <div class="premium-card p-10 space-y-8 relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 size-40 bg-rose-500/5 rounded-full blur-3xl"></div>
+        
+        <div class="flex items-center gap-4 relative z-10">
+            <div class="size-12 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <span class="material-symbols-outlined text-2xl font-black">cancel</span>
             </div>
             <div>
-                <h2 class="text-lg font-semibold text-gray-800">Rejection Reason</h2>
-                <p class="text-sm text-gray-500">Please provide a reason for rejecting this item</p>
+                <h2 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-widest">Formal Rejection Reason</h2>
+                <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase">Required for business reporting</p>
             </div>
         </div>
 
-        <form method="post" class="space-y-4">
+        <form method="POST" class="space-y-8 relative z-10">
             {% csrf_token %}
             
-            <div>
-                <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
-                    Reason for Rejection <span class="text-red-500">*</span>
-                </label>
+            <div class="space-y-4">
                 <textarea 
                     name="reason" 
                     id="reason" 
                     rows="4" 
                     required
-                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
-                    placeholder="e.g., Item is outside my service area, Unable to handle this category, etc."
+                    class="w-full px-6 py-5 bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-2xl text-[14px] font-bold placeholder:text-slate-300 focus:outline-none focus:ring-4 focus:ring-rose-500/5 transition-all resize-none"
+                    placeholder="Enter professional reason for declining procurement rights..."
                 >{{ form.reason.value|default:'' }}</textarea>
                 {% if form.reason.errors %}
-                <p class="text-red-500 text-sm mt-1">{{ form.reason.errors.0 }}</p>
+                <p class="text-rose-500 text-[10px] font-black uppercase tracking-widest mt-1 px-2">{{ form.reason.errors.0 }}</p>
                 {% endif %}
             </div>
 
-            <!-- Quick Reasons -->
+            <!-- Strategic Chips -->
             <div>
-                <p class="text-sm text-gray-600 mb-2">Quick select:</p>
-                <div class="flex flex-wrap gap-2">
-                    <button type="button" onclick="setReason('Item is outside my service area')" 
-                            class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                        Outside service area
-                    </button>
-                    <button type="button" onclick="setReason('Unable to process this category of e-waste')" 
-                            class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                        Cannot handle category
-                    </button>
-                    <button type="button" onclick="setReason('Currently at full capacity')" 
-                            class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                        At full capacity
-                    </button>
-                    <button type="button" onclick="setReason('Item condition not suitable for our facility')" 
-                            class="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                        Condition unsuitable
-                    </button>
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Common Strategic Reasons</p>
+                <div class="flex flex-wrap gap-3">
+                    <button type="button" onclick="setReason('Facility specialized logistics outside current radius')" class="quick-chip">Geography Constraint</button>
+                    <button type="button" onclick="setReason('Asset classification outside certified handling capabilities')" class="quick-chip">Category Mismatch</button>
+                    <button type="button" onclick="setReason('Inventory procurement at full operational capacity')" class="quick-chip">Capacity Limit</button>
+                    <button type="button" onclick="setReason('Asset state unsuitable for standard recovery protocols')" class="quick-chip">State Incompatibility</button>
                 </div>
             </div>
 
-            <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div class="flex gap-3">
-                    <svg class="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                    </svg>
-                    <div class="text-sm text-amber-800">
-                        <p class="font-medium">Note:</p>
-                        <p>After rejection, this item will be made available to other vendors in the area. The client will be notified of the reassignment.</p>
-                    </div>
-                </div>
+            <div class="p-4 rounded-xl bg-amber-500/5 border border-amber-500/10 flex items-start gap-3">
+                <span class="material-symbols-outlined text-amber-500 text-[18px]">info</span>
+                <p class="text-[10px] font-bold text-amber-600/70 leading-relaxed uppercase tracking-tight">
+                    By confirming rejection, you acknowledge that this asset will be immediately re-broadcasted to other verified vendors in the cluster.
+                </p>
             </div>
 
-            <div class="flex gap-3 pt-4">
-                <a href="{% url 'vendor:pending_requests' %}" 
-                   class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-center font-medium">
+            <div class="flex flex-col sm:flex-row gap-4 pt-4">
+                <button type="submit" class="flex-2 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg shadow-rose-600/20 transition-all hover:-translate-y-1">
+                    Confirm & Relinquish Rights
+                </button>
+                <a href="{% url 'vendor:pending_requests' %}" class="flex-1 h-14 border border-slate-200 dark:border-slate-700 text-slate-500 rounded-2xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center hover:bg-slate-50 transition-all">
                     Cancel
                 </a>
-                <button type="submit" 
-                        class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
-                    Confirm Rejection
-                </button>
             </div>
         </form>
     </div>
+
 </div>
 
 <script>

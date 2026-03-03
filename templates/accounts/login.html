@@ -127,7 +127,7 @@
             
             <!-- Bottom copyright -->
             <div class="absolute bottom-8 left-10 z-20">
-                <p class="text-[10px] font-bold text-white/20">© {% now "Y" %} eRecyclo. All rights reserved.</p>
+                <p class="text-[10px] font-bold text-white/20">© {% now "Y" %} eRECYCLO. ALL RIGHTS RESERVED.</p>
             </div>
         </div>
 
@@ -155,26 +155,26 @@
                     {% csrf_token %}
                     
                     <div>
-                        <label class="block text-[12px] font-bold text-slate-500 mb-2">Email Address</label>
+                        <label class="block text-[11px] font-bold text-slate-500 mb-2 uppercase">Email Address</label>
                         <div class="relative group">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none text-[20px] group-focus-within:text-primary transition-colors">mail</span>
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none text-[20px] group-focus-within:text-primary transition-colors">mail</span>
                             <input type="email" name="email" value="{{ request.POST.email }}" 
-                                class="!pl-12 !pr-4 !py-3.5 !bg-slate-50 !border-slate-200 !text-[14px] !font-semibold focus:!border-primary focus:!bg-white !rounded-xl" 
+                                class="!pl-12 !pr-4 !py-3.5 !text-slate-700 !bg-white !border-slate-300 !text-[14px] !font-semibold focus:!border-primary focus:!bg-white !rounded-xl" 
                                 placeholder="you@example.com" required autocomplete="email">
                         </div>
                     </div>
                     
                     <div>
                         <div class="flex items-center justify-between mb-2">
-                            <label class="block text-[12px] font-bold text-slate-500">Password</label>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase">Password</label>
                             <a href="{% url 'accounts:forgot_password' %}" class="text-[12px] font-bold text-primary hover:text-forest transition-colors">Forgot password?</a>
                         </div>
                         <div class="relative group">
-                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none text-[20px] group-focus-within:text-primary transition-colors">lock</span>
+                            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary pointer-events-none text-[20px] group-focus-within:text-primary transition-colors">lock</span>
                             <input type="password" name="password" id="loginPassword" 
-                                class="!pl-12 !pr-12 !py-3.5 !bg-slate-50 !border-slate-200 !text-[14px] !font-semibold focus:!border-primary focus:!bg-white !rounded-xl" 
+                                class="!pl-12 !pr-12 !py-3.5 !text-slate-700 !bg-white !border-slate-300 !text-[14px] !font-semibold focus:!border-primary focus:!bg-white !rounded-xl" 
                                 placeholder="Enter your password" required autocomplete="current-password">
-                            <button type="button" onclick="togglePwd('loginPassword', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors focus:outline-none">
+                            <button type="button" onclick="togglePwd('loginPassword', this)" class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-500 transition-colors focus:outline-none mt-1">
                                 <span class="material-symbols-outlined text-[20px]">visibility_off</span>
                             </button>
                         </div>

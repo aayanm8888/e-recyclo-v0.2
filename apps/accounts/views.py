@@ -465,12 +465,14 @@ def profile_view(request):
     """View user profile - redirects vendors/collectors to complete profile page"""
     user = request.user
     
-    # Redirect vendors to their complete profile page
-    if user.is_vendor:
+    # Redirect vendors/collectors if profile is not fully vetted
+    profile_completion = getattr(user, 'profile_completion', None)
+    is_vetted = profile_completion and profile_completion.approval_status in ['approved', 'pending']
+
+    if user.is_vendor and not is_vetted:
         return redirect('accounts:complete_vendor_profile')
     
-    # Redirect collectors to their complete profile page
-    elif user.is_collector:
+    elif user.is_collector and not is_vetted:
         return redirect('accounts:complete_collector_profile')
     
     # Clients use the basic profile view
@@ -508,6 +510,21 @@ def edit_profile_view(request):
                 form = ClientProfileForm(request.POST, request.FILES, instance=user.client_profile)
                 if form.is_valid():
                     form.save()
+            elif user.is_vendor:
+                # Update Vendor details from POST data
+                vendor = user.vendor_profile
+                vendor.contact_person = request.POST.get('contact_person', vendor.contact_person)
+                vendor.alternate_phone = request.POST.get('alternate_phone', vendor.alternate_phone)
+                vendor.company_name = request.POST.get('company_name', vendor.company_name)
+                vendor.business_address = request.POST.get('business_address', vendor.business_address)
+                vendor.save()
+            elif user.is_collector:
+                # Update Collector details from POST data
+                collector = user.collector_profile
+                collector.vehicle_type = request.POST.get('vehicle_type', collector.vehicle_type)
+                collector.vehicle_number = request.POST.get('vehicle_number', collector.vehicle_number)
+                collector.address = request.POST.get('address', collector.address)
+                collector.save()
             
             messages.success(request, 'Profile updated successfully!')
             return redirect('accounts:profile')

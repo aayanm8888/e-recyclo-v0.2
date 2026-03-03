@@ -320,6 +320,25 @@ class PhotoPost(models.Model):
         }
         return pill_classes.get(self.status, 'bg-slate-50 text-slate-600 border border-slate-100')
 
+    def get_client_status_tag(self):
+        """Standardized status tag for client-side display as per the best sync logic"""
+        s = self.status
+        tag = self.get_status_display().upper()
+        
+        if s == 'under_review': 
+            tag = "EVALUATION READY"
+        elif s == 'collected':
+            if self.vendor_declined_reevaluation:
+                tag = "RE-EVALUATION DECLINED"
+            elif self.rejection_count and self.rejection_count > 0:
+                tag = "RE-EVALUATING"
+            else:
+                tag = "INSPECTING"
+        elif s == 'pickup_scheduled' and not self.collector_id:
+            tag = "SEARCHING FOR COLLECTOR"
+            
+        return tag
+
 
 # ============================================
 # BULK PICKUP MODEL

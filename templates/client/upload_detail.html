@@ -210,8 +210,8 @@
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-2xl font-extrabold text-slate-700 dark:text-white leading-tight">{{ post.title }}</h2>
                     <span
-                        class="status-badge bg-primary/10 text-primary border border-primary/20 text-[10px] px-3 py-1 font-extrabold">
-                        {{ client_status_tag }}
+                        class="status-badge {{ post.get_status_badge_pilled_class }} text-[10px] px-3 py-1 font-extrabold rounded-lg">
+                        {{ post.get_client_status_tag }}
                     </span>
                 </div>
 
@@ -226,17 +226,17 @@
                     <div class="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-3">
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Quantity</p>
-                            <p class="text-sm font-semibold text-slate-800 dark:text-slate-200">{{ post.quantity }} Unit{{ post.quantity|pluralize }}</p>
+                            <p class="text-sm font-black text-slate-800 dark:text-slate-200">{{ post.quantity }} Unit{{ post.quantity|pluralize }}</p>
                         </div>
-                        <div>
+                        <div class="min-w-0 -ml-[27px]">
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Category
                             </p>
-                            <p class="text-sm font-black font-semibold">{{ post.get_ai_category_display }}</p>
+                            <p class="text-sm font-black text-slate-800 dark:text-white">{{ post.get_ai_category_display }}</p>
                         </div>
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Condition
                             </p>
-                            <p class="text-sm font-black font-semibold">{{ post.get_ai_condition_display }}</p>
+                            <p class="text-sm font-black text-slate-800 dark:text-white">{{ post.get_ai_condition_display }}</p>
                         </div>
                     </div>
                 </div>
@@ -255,12 +255,12 @@
                     </div>
                     <div class="flex items-center gap-4">
                         <div
-                            class="size-11 rounded-xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-                            <span class="material-symbols-outlined text-emerald-500 text-xl">payments</span>
+                            class="size-11 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20">
+                            <span class="material-symbols-outlined text-primary text-xl">payments</span>
                         </div>
                         <div>
-                            <p class="text-[10px] text-emerald-500 font-extrabold uppercase tracking-widest">Final Price (Vendor)</p>
-                            <p class="text-xl font-extrabold text-emerald-500">₹{{ post.vendor_final_value|default:"0" }}</p>
+                            <p class="text-[10px] text-primary font-extrabold uppercase tracking-widest">Final Price (Vendor)</p>
+                            <p class="text-xl font-extrabold text-primary">₹{{ post.vendor_final_value|default:"0" }}</p>
                         </div>
                     </div>
                 </div>
@@ -353,7 +353,12 @@
             <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                 <span class="size-1.5 bg-amber-500 rounded-full"></span> Collector
             </h4>
-            {% if post.collector or post.return_collector %}
+            {% if post.status == 'return_requested' %}
+            <div class="flex items-center gap-4 py-2">
+                <span class="material-symbols-outlined text-slate-300 text-4xl animate-pulse">person_search</span>
+                <p class="text-sm font-bold text-slate-400 ">Finding collector nearby for return...</p>
+            </div>
+            {% elif post.collector or post.return_collector %}
             <div class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-5 min-w-0">
                     <div
@@ -361,9 +366,9 @@
                         <span class="material-symbols-outlined text-3xl text-amber-600">electric_moped</span>
                     </div>
                     <div class="min-w-0">
-                        {% with c=post.collector|default:post.return_collector %}
+                        {% with c=post.return_collector|default:post.collector %}
                         <p class="text-[16px] font-extrabold text-slate-700 dark:text-white truncate">{{ c.get_full_name }}</p>
-                        <p class="text-xs font-bold text-slate-500 truncate mt-0.5">{{ post.collector.email|default:"contact@erecyclo.com" }}</p>
+                        <p class="text-xs font-bold text-slate-500 truncate mt-0.5">{{ c.email|default:"contact@erecyclo.com" }}</p>
                         <p class="text-xs font-bold text-slate-500 mt-1">{{ c.phone_number }}</p>
                         {% if post.return_collector %}
                         <p class="text-[10px] font-extrabold text-amber-500 mt-1 uppercase tracking-widest">Return active</p>
@@ -394,7 +399,7 @@
             </div>
             {% else %}
             <div class="flex items-center gap-4 py-2">
-                <span class="material-symbols-outlined text-slate-300 text-4xl">person_search</span>
+                <span class="material-symbols-outlined text-slate-300 text-4xl animate-pulse">person_search</span>
                 <p class="text-sm font-bold text-slate-400 ">Searching for collector...</p>
             </div>
             {% endif %}
@@ -694,7 +699,7 @@
                             class="size-11 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center border border-amber-100 dark:border-amber-900/30 shadow-sm overflow-hidden shrink-0">
                             <span class="material-symbols-outlined text-xl text-amber-600">person</span>
                         </div>
-                        <div class="flex-1 min-w-0">
+                        <div class="flex-[1.5] min-w-0">
                             <div class="flex flex-wrap items-center gap-3 mb-1">
                                 <h5 class="text-[14px] font-extrabold text-slate-700 dark:text-white truncate">{{ item.collector.get_full_name }}</h5>
                                 <div class="flex gap-2">

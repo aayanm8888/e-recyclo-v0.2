@@ -1,131 +1,241 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Available Pickups - eRecyclo{% endblock %}
-{% block page_title %}Available Pickups{% endblock %}
-{% block page_subtitle %}E-waste pickups within 5km of your location{% endblock %}
+{% block page_title %}Network Reach{% endblock %}
+{% block page_subtitle %}Explore e-waste assignments within your 5km operational radius{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --premium-bg: #f8fafc;
+    }
+
+    html.dark {
+        --premium-bg: #0f172a;
+    }
+
+    body {
+        background-color: var(--premium-bg) !important;
+    }
+
+    .premium-card {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 1.5rem;
+    }
+
+    .premium-card:hover {
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        transform: translateY(-2px);
+    }
+
+    .dark .premium-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    }
+
+    .status-badge {
+        font-size: 8px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        padding: 5px 12px;
+        border-radius: 9999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        backdrop-filter: blur(4px);
+    }
+
+    .info-gradient {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    }
+
+    .dark .info-gradient {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    }
+</style>
+{% endblock %}
 
 {% block page_content %}
-<div class="space-y-4">
+<div class="max-w-7xl mx-auto space-y-10 pb-24 px-4 sm:px-6">
 
-<!-- Info Banner -->
-<div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-4">
-    <div class="flex items-start gap-3">
-        <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">info</span>
-        <div class="text-sm text-blue-800 dark:text-blue-300">
-            <p class="font-medium">How it works:</p>
-            <ul class="mt-1 space-y-1 text-blue-700 dark:text-blue-400">
-                <li>• Pickups shown are within <strong>5km</strong> of your location</li>
-                <li>• Your vehicle type: <strong>{{ vehicle_type|default:"bike" }}</strong></li>
-                <li>• Multiple collectors can see the same pickup - <strong>first to accept gets it</strong></li>
-                <li>• <span class="text-green-600 font-medium">🟢 Regular</span> = Client → Vendor | <span class="text-orange-600 font-medium">🔶 Return</span> = Vendor → Client</li>
-            </ul>
-        </div>
-    </div>
-</div>
-
-{% if pickups %}
-<p class="text-sm text-slate-500 mb-4">{{ total_count }} pickup{{ total_count|pluralize }} available in your area</p>
-
-<div class="space-y-4">
-{% for req in pickups %}
-<div class="bg-white dark:bg-slate-800 rounded-2xl border {% if req.pickup_type == 'return' %}border-orange-300 dark:border-orange-700{% elif req.pickup_type == 'vendor_transfer' %}border-purple-300 dark:border-purple-700{% else %}border-slate-200 dark:border-slate-700{% endif %} overflow-hidden hover:shadow-lg transition-shadow {% if not req.can_handle %}opacity-60{% endif %}" >
-    
-    <!-- Pickup Type Banner -->
-    {% if req.pickup_type == 'return' %}
-    <div class="bg-orange-100 dark:bg-orange-900/30 px-5 py-2 flex items-center gap-2">
-        <span class="material-symbols-outlined text-orange-600 text-base">undo</span>
-        <span class="text-xs font-bold text-orange-700 dark:text-orange-400">RETURN PICKUP</span>
-        <span class="text-xs text-orange-600 dark:text-orange-500">— Pick from Vendor, Deliver to Client</span>
-    </div>
-    {% elif req.pickup_type == 'vendor_transfer' %}
-    <div class="bg-purple-100 dark:bg-purple-900/30 px-5 py-2 flex items-center gap-2">
-        <span class="material-symbols-outlined text-purple-600 text-base">swap_horiz</span>
-        <span class="text-xs font-bold text-purple-700 dark:text-purple-400">VENDOR TRANSFER</span>
-        <span class="text-xs text-purple-600 dark:text-purple-500">— Pick from Old Vendor, Deliver to New Vendor</span>
-    </div>
-    {% else %}
-    <div class="bg-green-100 dark:bg-green-900/30 px-5 py-2 flex items-center gap-2">
-        <span class="material-symbols-outlined text-green-600 text-base">local_shipping</span>
-        <span class="text-xs font-bold text-green-700 dark:text-green-400">REGULAR PICKUP</span>
-        <span class="text-xs text-green-600 dark:text-green-500">— Pick from Client, Deliver to Vendor</span>
-    </div>
-    {% endif %}
-    
-    <div class="p-5 flex gap-5">
-        {% if req.item.photo %}
-        <img src="{{ req.item.photo.url }}" alt="{{ req.item.title }}" class="w-36 h-36 object-cover rounded-xl flex-shrink-0 border border-slate-100 dark:border-slate-700">
-        {% else %}
-        <div class="w-36 h-36 bg-slate-100 dark:bg-slate-700 rounded-xl flex items-center justify-center flex-shrink-0">
-            <span class="material-symbols-outlined text-slate-400 text-4xl">devices</span>
-        </div>
-        {% endif %}
-        
-        <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-3 mb-2">
-                <div>
-                    <h3 class="font-bold text-slate-900 dark:text-white text-base">{{ req.item.title }}</h3>
-                    <div class="flex flex-wrap gap-1.5 mt-1.5">
-                        <span class="text-xs px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300">{{ req.item.get_ai_category_display }}</span>
-                        {% if req.item.item_size %}
-                        <span class="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 rounded-full text-purple-700 dark:text-purple-400">{{ req.item.get_item_size_display }}</span>
-                        {% endif %}
-                        {% if req.item.estimated_weight %}
-                        <span class="text-xs px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 rounded-full text-amber-700 dark:text-amber-400">{{ req.item.get_estimated_weight_display }}</span>
-                        {% endif %}
+    <!-- Premium Info Banner -->
+    <div class="premium-card p-6 info-gradient border-none overflow-hidden relative group">
+        <div class="absolute -right-10 -top-10 size-40 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
+        <div class="flex items-start gap-5 relative z-10">
+            <div class="size-12 rounded-2xl bg-white dark:bg-slate-800 flex items-center justify-center text-blue-600 shadow-sm border border-blue-100 dark:border-slate-700">
+                <span class="material-symbols-outlined text-2xl">info</span>
+            </div>
+            <div>
+                <h4 class="text-[11px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-2">Fleet Operational Logic</h4>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="space-y-1">
+                        <p class="text-[12px] font-black text-slate-700 dark:text-white mb-0.5">5km Coverage</p>
+                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed">Optimization for your transit efficiency.</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[12px] font-black text-slate-700 dark:text-white mb-0.5">Vehicle Compatibility</p>
+                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed">Tasks filtered by your registered vehicle: <strong>{{ vehicle_type|default:"bike" }}</strong></p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[12px] font-black text-slate-700 dark:text-white mb-0.5">Concurrent Visibility</p>
+                        <p class="text-[10px] font-bold text-slate-500 dark:text-slate-400 leading-relaxed">Multiple collectors see tasks - fastest response wins.</p>
+                    </div>
+                    <div class="space-y-1 text-xs">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="size-2 rounded-full bg-emerald-500"></span> <strong>Regular:</strong> Client → Vendor
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="size-2 rounded-full bg-orange-500"></span> <strong>Return:</strong> Vendor → Client
+                        </div>
                     </div>
                 </div>
-                <div class="text-right flex-shrink-0">
-                    <span class="inline-flex items-center gap-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 px-2 py-1 rounded-full font-medium">
-                        <span class="material-symbols-outlined" style="font-size:12px">near_me</span>
-                        {{ req.distance }} km
-                    </span>
-                </div>
-            </div>
-            
-            <div class="grid grid-cols-1 gap-y-1.5 mb-3 text-xs">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-green-500" style="font-size:14px">trip_origin</span>
-                    <span class="text-slate-600 dark:text-slate-400"><strong>From:</strong> {{ req.from_location|default:req.item.address|truncatechars:50 }}</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-red-500" style="font-size:14px">location_on</span>
-                    <span class="text-slate-600 dark:text-slate-400"><strong>To:</strong> {{ req.to_location|default:"Vendor"|truncatechars:50 }}</span>
-                </div>
-            </div>
-            
-            <div class="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-700">
-                <div>
-                    <p class="text-xs text-slate-500">Estimated Earning</p>
-                    <p class="text-xl font-bold text-green-600">₹39+</p>
-                    <p class="text-xs text-slate-400">(Base + distance + handling)</p>
-                </div>
-                
-                {% if req.can_handle %}
-                <a href="{% url 'collector:accept_pickup' req.item.pk %}" 
-                   class="{% if req.pickup_type == 'return' %}bg-orange-500 hover:bg-orange-600{% elif req.pickup_type == 'vendor_transfer' %}bg-purple-500 hover:bg-purple-600{% else %}bg-primary hover:bg-forest{% endif %} text-white px-6 py-3 rounded-xl font-bold text-sm transition-colors">
-                    Accept {% if req.pickup_type == 'return' %}Return{% elif req.pickup_type == 'vendor_transfer' %}Transfer{% endif %} Pickup
-                </a>
-                {% else %}
-                <div class="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-4 py-3 rounded-xl text-xs text-center">
-                    <span class="material-symbols-outlined mr-1" style="font-size:14px;vertical-align:middle">local_shipping</span>
-                    {{ req.reason }}
-                </div>
-                {% endif %}
             </div>
         </div>
     </div>
-</div>
-{% endfor %}
-</div>
 
-{% else %}
-<div class="bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-12 text-center">
-    <div class="w-16 h-16 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4">
-        <span class="material-symbols-outlined text-slate-400 text-3xl">local_shipping</span>
+    {% if pickups %}
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+        {% for req in pickups %}
+        {% with can_h=req.can_handle %}
+        <div class="premium-card overflow-hidden group {% if not can_h %}opacity-60 grayscale-[0.4]{% endif %}">
+            <!-- Pickup Type Top Bar -->
+            {% if req.pickup_type == 'return' %}
+            <div class="bg-orange-50 dark:bg-orange-950/30 px-6 py-2 border-b border-orange-100 dark:border-orange-900/20 flex items-center gap-3">
+                <span class="material-symbols-outlined text-orange-600 text-[18px]">undo</span>
+                <span class="text-[9px] font-black text-orange-700 dark:text-orange-400 uppercase tracking-widest">Return Shipment · Vendor to Client</span>
+            </div>
+            {% elif req.pickup_type == 'vendor_transfer' %}
+            <div class="bg-purple-50 dark:bg-purple-950/30 px-6 py-2 border-b border-purple-100 dark:border-purple-900/20 flex items-center gap-3">
+                <span class="material-symbols-outlined text-purple-600 text-[18px]">swap_horiz</span>
+                <span class="text-[9px] font-black text-purple-700 dark:text-purple-400 uppercase tracking-widest">Facility Transfer · Recycler to Recycler</span>
+            </div>
+            {% else %}
+            <div class="bg-emerald-50 dark:bg-emerald-950/30 px-6 py-2 border-b border-emerald-100 dark:border-emerald-900/20 flex items-center gap-3">
+                <span class="material-symbols-outlined text-emerald-600 text-[18px]">local_shipping</span>
+                <span class="text-[9px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Primary Pickup · Client to Recycler</span>
+            </div>
+            {% endif %}
+
+            <div class="flex flex-col sm:flex-row items-stretch min-h-[250px]">
+                <!-- IMAGE SIDE -->
+                <div class="sm:w-[35%] p-6 pr-0 flex flex-col items-center justify-center gap-5">
+                    <div class="size-40 rounded-[1.2rem] overflow-hidden bg-white dark:bg-slate-900 shadow-inner p-2.5 border border-slate-100 dark:border-slate-800 shrink-0 relative">
+                        {% if req.item.photo %}
+                        <img src="{{ req.item.photo.url }}" alt="{{ req.item.title }}"
+                             class="w-full h-full object-cover rounded-[1rem] group-hover:scale-105 transition-transform duration-700">
+                        {% else %}
+                        <div class="w-full h-full flex items-center justify-center text-slate-300 dark:text-slate-700">
+                            <span class="material-symbols-outlined text-4xl">devices</span>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Near Me Badge -->
+                        <div class="absolute top-4 left-4">
+                            <span class="bg-blue-600 text-white text-[8px] font-black px-2 py-1 rounded-lg flex items-center gap-1 shadow-lg shadow-blue-600/30 uppercase tracking-tighter">
+                                <span class="material-symbols-outlined text-[10px]">near_me</span>
+                                {{ req.distance }}km
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENT SIDE -->
+                <div class="flex-1 p-8 pl-4 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-start justify-between gap-4 mb-4">
+                            <div class="flex-1 min-w-0">
+                                <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white leading-tight group-hover:text-primary transition-colors truncate mb-1">{{ req.item.title }}</h3>
+                                <div class="flex items-center gap-2 mt-1">
+                                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">ID #{{ req.item.pk }}</span>
+                                     <span class="size-1 rounded-full bg-slate-300"></span>
+                                     <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">{{ req.item.get_ai_category_display }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Location Flow -->
+                        <div class="space-y-3 mb-6">
+                            <div class="flex items-center gap-3">
+                                <div class="size-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/30 shrink-0">
+                                    <span class="material-symbols-outlined text-[16px]">trip_origin</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Pickup</p>
+                                    <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{{ req.from_location|default:req.item.address|truncatechars:50 }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="size-8 rounded-lg bg-red-50 dark:bg-red-950/20 text-red-600 flex items-center justify-center border border-red-100 dark:border-red-900/30 shrink-0">
+                                    <span class="material-symbols-outlined text-[16px]">location_on</span>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Delivery</p>
+                                    <p class="text-[11px] font-bold text-slate-700 dark:text-slate-200 truncate">{{ req.to_location|default:"Recycler Facility"|truncatechars:50 }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Specs -->
+                        <div class="flex gap-4 border-t border-slate-50 dark:border-slate-800/50 pt-4">
+                            <div class="flex-1">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Size</p>
+                                <p class="text-[10px] font-black text-slate-700 dark:text-slate-200">{{ req.item.get_item_size_display|default:"Standard" }}</p>
+                            </div>
+                            <div class="flex-1 border-l border-slate-50 dark:border-slate-800/50 pl-4">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Est. Weight</p>
+                                <p class="text-[10px] font-black text-slate-700 dark:text-slate-200">{{ req.item.get_estimated_weight_display|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-6 mt-4 border-t border-slate-100 dark:border-slate-800">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-[8px] text-slate-400 font-extrabold uppercase tracking-widest mb-1 truncate">Est. Payout</p>
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-lg font-black text-emerald-600">₹39+</span>
+                                <span class="text-[9px] font-bold text-slate-400 italic">Total</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            {% if can_h %}
+                            <a href="{% url 'collector:accept_pickup' req.item.pk %}" 
+                               class="shrink-0 py-3 px-6 rounded-xl {% if req.pickup_type == 'return' %}bg-orange-500 shadow-orange-500/20{% elif req.pickup_type == 'vendor_transfer' %}bg-purple-500 shadow-purple-500/20{% else %}bg-primary shadow-primary/20{% endif %} text-white text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg">
+                                Accept Mission
+                            </a>
+                            {% else %}
+                            <div class="text-right">
+                                <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Incompatible</p>
+                                <div class="px-3 py-2 bg-slate-50 dark:bg-slate-900 rounded-lg flex items-center gap-1.5 border border-slate-100 dark:border-slate-800">
+                                    <span class="material-symbols-outlined text-[14px] text-slate-400">lock</span>
+                                    <span class="text-[9px] font-black text-slate-500">{{ req.reason }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
     </div>
-    <h3 class="text-lg font-semibold text-slate-700 dark:text-slate-300 mb-2">No Available Pickups</h3>
-    <p class="text-slate-500 dark:text-slate-400 text-sm">There are no pickups within 5km of your location right now.<br>Check back later or wait for new vendor assignments.</p>
-</div>
-{% endif %}
+
+    {% else %}
+    <div class="premium-card p-20 flex flex-col items-center justify-center text-center">
+        <div class="size-24 rounded-[2rem] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center mb-8 shadow-inner">
+             <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">near_me_disabled</span>
+        </div>
+        <h4 class="text-xl font-black text-slate-800 dark:text-white mb-3">Service Grid is Empty</h4>
+        <p class="text-[13px] text-slate-400 font-bold max-w-sm leading-relaxed mb-10">There are no pending pickups within your operational radius. Stay active on the dashboard to receive new mission alerts.</p>
+    </div>
+    {% endif %}
 
 </div>
 {% endblock %}

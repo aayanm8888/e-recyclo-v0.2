@@ -160,41 +160,27 @@ def upload_ewaste(request):
                 post = form.save(commit=False)
                 post.user = request.user
                 
-                # Get AI category from form (already detected in frontend)
-                ai_category = request.POST.get('ai_category', 'other')
-                ai_confidence = float(request.POST.get('ai_confidence', 0))
+                # AI category from form (already detected in frontend or manually selected)
+                # These keys now match CategoryMapper: smartphone, laptop, monitor, battery, appliance, other
+                post.ai_category = request.POST.get('ai_category', 'other')
+                post.ai_confidence = float(request.POST.get('ai_confidence', 0))
                 
-                # Map AI category to your existing category system
-                category_mapping = {
-                    'smartphone': 'smartphone',
-                    'laptop': 'laptop',
-                    'monitor': 'desktop',  # You might not have monitor, map to desktop
-                    'battery': 'battery',
-                    'appliance': 'washing_machine',  # Map to closest match
-                    'other': 'electronics',
-                }
-                
-                post.ai_category = category_mapping.get(ai_category, 'electronics')
-                post.ai_confidence = ai_confidence
-                
-                # Estimate value based on AI category (your existing logic)
+                # Estimate value based on unified CategoryMapper keys
                 title_lower = post.title.lower()
                 
                 if post.ai_category == 'smartphone':
                     post.ai_estimated_value = Decimal(str(random.randint(200, 500)))
                 elif post.ai_category == 'laptop':
                     post.ai_estimated_value = Decimal(str(random.randint(500, 1500)))
-                elif post.ai_category == 'desktop':
+                elif post.ai_category == 'monitor':
                     post.ai_estimated_value = Decimal(str(random.randint(300, 1000)))
                 elif post.ai_category == 'battery':
                     post.ai_estimated_value = Decimal(str(random.randint(50, 200)))
-                elif post.ai_category == 'refrigerator':
+                elif post.ai_category == 'appliance':
+                    # Average for large appliances
                     post.ai_estimated_value = Decimal(str(random.randint(800, 2000)))
-                elif post.ai_category == 'washing_machine':
-                    post.ai_estimated_value = Decimal(str(random.randint(600, 1500)))
-                elif post.ai_category == 'ac':
-                    post.ai_estimated_value = Decimal(str(random.randint(1000, 3000)))
                 else:
+                    # 'other' category (accessories, etc.)
                     post.ai_estimated_value = Decimal(str(random.randint(100, 500)))
                 
                 # Detect condition from title (your existing logic)
@@ -553,23 +539,18 @@ def upload_detail(request, pk):
             vendor_status_tag = "Inspecting"
     elif s == 'pickup_scheduled' and not post.collector: vendor_status_tag = "Searching for Collector"
 
-    client_status_tag = post.get_status_display().upper()
-    if s == 'under_review': client_status_tag = "EVALUATION READY"
-    elif s == 'collected':
-        if post.vendor_declined_reevaluation:
-            client_status_tag = "RE-EVALUATION DECLINED"
-        elif post.rejection_count and post.rejection_count > 0:
-            client_status_tag = "RE-EVALUATING"
-        else:
-            client_status_tag = "INSPECTING"
-    elif s == 'pickup_scheduled' and not post.collector:
-        client_status_tag = "SEARCHING FOR COLLECTOR"
+    client_status_tag = post.get_client_status_tag()
 
     collector_status_tag = "Pending"
     if s in ['collected', 'under_review', 'completed']: 
         collector_status_tag = "Delivered to Vendor"
-    elif s in ['assigned', 'accepted', 'pickup_scheduled', 'return_pickup_scheduled']: 
-        if (s == 'pickup_scheduled' or s == 'return_pickup_scheduled') and not post.collector and not post.return_collector:
+    elif s in ['assigned', 'accepted', 'pickup_scheduled']: 
+        if s == 'pickup_scheduled' and not post.collector:
+            collector_status_tag = "Searching"
+        else:
+            collector_status_tag = "Scheduled"
+    elif s in ['return_requested', 'return_pickup_scheduled']:
+        if not post.return_collector:
             collector_status_tag = "Searching"
         else:
             collector_status_tag = "Scheduled"
@@ -849,8 +830,37 @@ def review_offer(request, pk):
             messages.info(request, f'Offer rejected. Vendor notified to re-evaluate (rejection #{post.rejection_count}).')
             return redirect('client:upload_detail', pk=pk)
 
+    # Assign Vendor tags based on chronological order of first appearance
+    vendor_tags_map = {}
+    ordered_v_ids = []
+    
+    # Get all history records for this post, sorted oldest first
+    all_h = EvaluationHistory.objects.filter(post=post).order_by('evaluated_at')
+    for rec in all_h:
+        if rec.vendor_id and rec.vendor_id not in ordered_v_ids:
+            ordered_v_ids.append(rec.vendor_id)
+            
+    # Also include current vendor in discovery if not already there
+    if post.vendor_id and post.vendor_id not in ordered_v_ids:
+        ordered_v_ids.append(post.vendor_id)
+        
+    for i, vid in enumerate(ordered_v_ids):
+        vendor_tags_map[vid] = f"Vendor {i + 1}"
+        
+    # Apply tags to the history objects for the template
+    for h in history:
+        h.vendor_tag = vendor_tags_map.get(h.vendor_id, f"Vendor {len(ordered_v_ids) + 1}" if h.vendor_id else "N/A")
+
+    # Determine current vendor's tag
+    current_vendor_tag = vendor_tags_map.get(post.vendor_id, "N/A")
+
     proposed_action = request.GET.get('action', 'reject')
-    return render(request, 'client/review_offer.html', {'post': post, 'history': history, 'proposed_action': proposed_action})
+    return render(request, 'client/review_offer.html', {
+        'post': post, 
+        'history': history, 
+        'proposed_action': proposed_action,
+        'current_vendor_tag': current_vendor_tag
+    })
 
 
 @login_required

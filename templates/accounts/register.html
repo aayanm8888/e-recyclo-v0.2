@@ -18,8 +18,8 @@
         * { font-family: 'Plus Jakarta Sans', sans-serif; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
         textarea, input[type="text"], input[type="email"], input[type="tel"], input[type="password"], select {
-            width: 100%; padding: 0.875rem 1rem; background: #f8fafc;
-            border: 1px solid #e2e8f0; border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600;
+            width: 100%; padding: 0.875rem 1rem; background: #fff;
+            border-radius: 0.75rem; font-size: 0.875rem; font-weight: 600;
             color: #0f172a; outline: none; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif;
         }
         textarea:focus, input:focus, select:focus { border-color: #17cf17; box-shadow: 0 0 0 3px rgb(23 207 23 / 0.1); background: #fff; }
@@ -123,7 +123,7 @@
             </div>
             
             <div class="absolute bottom-8 left-10 z-20">
-                <p class="text-[10px] font-bold text-white/20">© {% now "Y" %} eRecyclo. All rights reserved.</p>
+                <p class="text-[10px] font-bold text-white/20">© {% now "Y" %} eRECYCLO. ALL RIGHTS RESERVED.</p>
             </div>
         </div>
 
@@ -151,11 +151,11 @@
                     {% csrf_token %}
 
                     <!-- User Type -->
-                    <div>
-                        <label class="block text-[12px] font-bold text-slate-500 mb-2">I want to</label>
+                    <div class="">
+                        <label class="block text-[12px] font-bold text-slate-500 mb-2">Role - Select your Role</label>
                         <div class="grid grid-cols-3 gap-2">
                             {% for value, label in form.user_type.field.choices %}
-                            <label class="user-type-option flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 cursor-pointer transition-all text-center
+                            <label class="user-type-option flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl uppercase text-slate-300 border-2 cursor-pointer transition-all text-center
                                 {% if forloop.first %}border-primary bg-primary/5{% else %}border-slate-100 hover:border-primary/50{% endif %}">
                                 <input type="radio" name="user_type" value="{{ value }}" class="sr-only" {% if forloop.first %}checked{% endif %}>
                                 <span class="material-symbols-outlined text-[20px] {% if forloop.first %}text-primary{% else %}text-slate-400{% endif %}">
@@ -169,14 +169,14 @@
                     </div>
 
                     <!-- Name -->
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-2 gap-3 pt-[20px]">
                         <div>
-                            <label class="block text-[12px] font-bold text-slate-500 mb-2">First Name</label>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2 !border-slate-300 ">First Name</label>
                             {{ form.first_name }}
                             {% if form.first_name.errors %}<p class="mt-1 text-xs text-red-500">{{ form.first_name.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
-                            <label class="block text-[12px] font-bold text-slate-500 mb-2">Last Name</label>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2 !border-slate-300 ">Last Name</label>
                             {{ form.last_name }}
                             {% if form.last_name.errors %}<p class="mt-1 text-xs text-red-500">{{ form.last_name.errors.0 }}</p>{% endif %}
                         </div>
@@ -184,7 +184,7 @@
 
                     <!-- Username -->
                     <div>
-                        <label class="block text-[12px] font-bold text-slate-500 mb-2">Username</label>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Username</label>
                         <div class="relative">
                             {{ form.username }}
                             <div class="absolute right-3 top-1/2 -translate-y-1/2" id="usernameStatus"></div>
@@ -196,14 +196,14 @@
 
                     <!-- Email -->
                     <div>
-                        <label class="block text-[12px] font-bold text-slate-500 mb-2">Email Address</label>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Email Address</label>
                         {{ form.email }}
                         {% if form.email.errors %}<p class="mt-1 text-xs text-red-500">{{ form.email.errors.0 }}</p>{% endif %}
                     </div>
 
                     <!-- Phone -->
                     <div>
-                        <label class="block text-[12px] font-bold text-slate-500 mb-2">Phone Number</label>
+                        <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Phone Number</label>
                         {{ form.phone_number }}
                         {% if form.phone_number.errors %}<p class="mt-1 text-xs text-red-500">{{ form.phone_number.errors.0 }}</p>{% endif %}
                     </div>
@@ -211,7 +211,7 @@
                     <!-- Password -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-[12px] font-bold text-slate-500 mb-2">Password</label>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Password</label>
                             <div class="relative">
                                 {{ form.password }}
                                 <button type="button" onclick="togglePwd('password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors focus:outline-none">
@@ -221,7 +221,7 @@
                             {% if form.password.errors %}<p class="mt-1 text-xs text-red-500">{{ form.password.errors.0 }}</p>{% endif %}
                         </div>
                         <div>
-                            <label class="block text-[12px] font-bold text-slate-500 mb-2">Confirm Password</label>
+                            <label class="block text-[11px] font-bold text-slate-500 uppercase mb-2">Confirm Password</label>
                             <div class="relative">
                                 {{ form.password_confirm }}
                                 <button type="button" onclick="togglePwd('password_confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors focus:outline-none">
@@ -247,7 +247,7 @@
                             {% if form.password_confirm.errors %}<p class="mt-1 text-xs text-red-500">{{ form.password_confirm.errors.0 }}</p>{% endif %}
 
                     <!-- Submit -->
-                    <button type="submit" id="submitBtn" class="w-full flex items-center justify-center gap-3 text-white py-4 rounded-xl font-bold text-[14px] transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 mt-2" style="background: linear-gradient(140deg, #17cf17 5%, #228b22 55%, #0f172a 150%);">
+                    <button type="submit" id="submitBtn" class="w-full flex items-center justify-center gap-3 text-white py-4 rounded-xl font-bold text-[14px] transition-all shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5 active:translate-y-0 mt-2" style="background: linear-gradient(140deg, #17cf17 5%, #228b22 55%, #0f172a 150%); margin-top: 32px;">
                         Create Account
                         <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
                     </button>
