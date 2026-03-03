@@ -354,7 +354,7 @@ class PhotoPost(models.Model):
             else:
                 tag = "VALUATION READY"
         elif s == 'pickup_scheduled':
-            tag = "AWAITING PICKUP" if not self.collector_id else "COLLECTOR ASSIGNED"
+            tag = "SEARCHING FOR COLLECTOR" if not self.collector_id else "COLLECTOR ASSIGNED"
         elif s == 'in_transit':
             tag = "HEADING TO YOU"
         elif s == 'completed':

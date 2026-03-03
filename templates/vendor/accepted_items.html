@@ -2,8 +2,8 @@
 {% load static %}
 
 {% block title %}Accepted Items - eRecyclo{% endblock %}
-{% block page_title %}Inventory{% endblock %}
-{% block page_subtitle %}Lifecycle management of your accepted e-waste assets{% endblock %}
+{% block page_title %}My Inventory{% endblock %}
+{% block page_subtitle %}Management of your accepted e-waste items{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -97,7 +97,7 @@
                 Returns <span class="{% if tab == 'returns' %}bg-white/20 text-white{% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %} rounded-lg px-2 py-0.5 text-[9px] font-black">{{ counts.returns }}</span>
             </a>
             <a href="?tab=transferred" class="tab-btn whitespace-nowrap px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shrink-0 {% if tab == 'transferred' %}bg-primary text-white shadow-lg shadow-primary/20 active{% else %}text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800{% endif %}">
-                Out <span class="{% if tab == 'transferred' %}bg-white/20 text-white{% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %} rounded-lg px-2 py-0.5 text-[9px] font-black">{{ counts.transferred }}</span>
+                Transferred <span class="{% if tab == 'transferred' %}bg-white/20 text-white{% else %}bg-slate-100 dark:bg-slate-800 text-slate-500{% endif %} rounded-lg px-2 py-0.5 text-[9px] font-black">{{ counts.transferred }}</span>
             </a>
         </div>
 
@@ -164,7 +164,7 @@
                             <div class="flex-1 min-w-0">
                                 <h3 class="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white leading-tight group-hover:text-primary transition-colors truncate mb-1">{{ item.title }}</h3>
                                 <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                                    {% if item.is_transferred %}Asset #{{ item.pk }} · Transferred Out{% else %}Post #{{ item.pk }} · Client: {{ item.user.get_full_name }}{% endif %}
+                                    {% if item.is_transferred %}Item #{{ item.pk }} · Transferred Out{% else %}Item #{{ item.pk }} · Client: {{ item.user.get_full_name }}{% endif %}
                                 </p>
                             </div>
                             <div class="shrink-0 flex items-center h-7">
@@ -174,50 +174,19 @@
                                 </span>
                                 {% else %}
                                 <span class="status-badge {{ item.get_status_badge_pilled_class }} py-1 px-3 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-lg leading-none whitespace-nowrap">
-                                    {{ item.get_vendor_status_tag }}
+                                    {% if item.status == 'collected' %}
+                                        {% if item.vendor_declined_reevaluation %}CLIENT ACTION PENDING
+                                        {% elif item.has_evaluated_by_me %}RE-VALUATION READY
+                                        {% else %}VALUATION READY{% endif %}
+                                    {% else %}
+                                        {{ item.get_vendor_status_tag }}
+                                    {% endif %}
                                 </span>
                                 {% endif %}
                             </div>
                         </div>
 
-                        <!-- Description / Status Detail -->
-                        <div class="mb-6">
-                            {% if item.is_transferred %}
-                                <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                    <span class="material-symbols-outlined text-[14px]">output</span> Handed to <span class="text-slate-800 dark:text-slate-200">{{ item.vendor.get_full_name|default:"Partner Facility" }}</span>
-                                </p>
-                            {% else %}
-                                {% if item.status == 'under_review' %}
-                                    <p class="text-[11px] text-indigo-600 dark:text-indigo-400 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[14px]">history_edu</span> Offer Under client review
-                                    </p>
-                                {% elif item.status == 'collected' %}
-                                    <p class="text-[11px] text-primary font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[14px]">fact_check</span> Ready {% if item.vendor_final_value %}for Re-valuation{% else %}for Valuation{% endif %}
-                                    </p>
-                                {% elif item.status == 'completed' %}
-                                    <p class="text-[11px] text-emerald-600 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[14px]">check_circle</span> Asset processed successfully
-                                    </p>
-                                {% elif item.status == 'returned_to_client' %}
-                                    <p class="text-[11px] text-teal-600 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[14px]">keyboard_return</span> Returned to customer
-                                    </p>
-                                {% elif item.status == 'pickup_scheduled' %}
-                                    <p class="text-[11px] text-blue-600 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[14px]">schedule</span> Pickup Scheduled - Awaiting Pickup
-                                    </p>
-                                {% elif item.status == 'in_transit' %}
-                                    <p class="text-[11px] text-orange-600 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[14px]">local_shipping</span> Asset in transit - heading to you
-                                    </p>
-                                {% else %}
-                                    <p class="text-[11px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-1.5">
-                                        <span class="material-symbols-outlined text-[14px]">hourglass_empty</span> Logistics in progress
-                                    </p>
-                                {% endif %}
-                            {% endif %}
-                        </div>
+                        
 
                         <!-- Meta Flow (Specs) -->
                         <div class="flex gap-4 sm:gap-6 mt-4 mb-8 border-y border-slate-50 dark:border-slate-800/50 py-4">
@@ -226,7 +195,7 @@
                                 <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200">{{ item.quantity }} Unit</p>
                             </div>
                             <div class="flex-[1.5] min-w-0">
-                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Category</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">AI Category</p>
                                 <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200 truncate">{{ item.get_ai_category_display }}</p>
                             </div>
                             <div class="flex-[1.5] min-w-0">
@@ -234,7 +203,7 @@
                                 <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">New Holder</p>
                                 <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200 truncate">{{ item.vendor.get_full_name|default:"Searching..." }}</p>
                                 {% else %}
-                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Condition</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 leading-none">AI Condition</p>
                                 <p class="text-[10px] sm:text-[11px] font-black text-slate-700 dark:text-slate-200 truncate">{{ item.get_ai_condition_display }}</p>
                                 {% endif %}
                             </div>
@@ -289,7 +258,7 @@
                             {% if item.status == 'collected' and not item.vendor_declined_reevaluation %}
                                 <a href="{% url 'vendor:evaluate_item' item.pk %}" 
                                    class="shrink-0 py-3 px-6 sm:px-8 rounded-xl bg-primary text-white text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-primary/20">
-                                    {% if item.rejection_count > 0 %}Re-evaluate{% else %}Evaluate{% endif %}
+                                    {% if item.has_evaluated_by_me %}Re-evaluate{% else %}Evaluate{% endif %}
                                 </a>
                             {% endif %}
                         </div>
@@ -300,12 +269,57 @@
         {% endfor %}
     </div>
 
+    <!-- PREMIUM PAGINATION CONTROLS -->
+    {% if items.paginator.num_pages > 1 %}
+    <div class="mt-20 flex items-center justify-center gap-4">
+        <!-- Previous Page -->
+        {% if items.has_previous %}
+        <a href="?tab={{ tab }}&page={{ items.previous_page_number }}" 
+           class="size-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all group shadow-sm">
+            <span class="material-symbols-outlined text-[24px] group-hover:-translate-x-0.5 transition-transform">chevron_left</span>
+        </a>
+        {% else %}
+        <div class="size-12 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100/50 dark:border-slate-800/50 flex items-center justify-center text-slate-200 dark:text-slate-700 cursor-not-allowed">
+            <span class="material-symbols-outlined text-[24px]">chevron_left</span>
+        </div>
+        {% endif %}
+
+        <!-- Page Numbers -->
+        <div class="flex items-center gap-3">
+            {% for num in items.paginator.page_range %}
+                {% if items.number == num %}
+                <span class="size-12 rounded-2xl bg-primary text-white flex items-center justify-center text-[13px] font-black shadow-lg shadow-primary/30">
+                    {{ num }}
+                </span>
+                {% elif num > items.number|add:'-3' and num < items.number|add:'3' %}
+                <a href="?tab={{ tab }}&page={{ num }}" 
+                   class="size-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-500 hover:border-primary/30 hover:text-primary text-[13px] font-black transition-all shadow-sm">
+                    {{ num }}
+                </a>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Next Page -->
+        {% if items.has_next %}
+        <a href="?tab={{ tab }}&page={{ items.next_page_number }}" 
+           class="size-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/30 transition-all group shadow-sm">
+            <span class="material-symbols-outlined text-[24px] group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+        </a>
+        {% else %}
+        <div class="size-12 rounded-2xl bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100/50 dark:border-slate-800/50 flex items-center justify-center text-slate-200 dark:text-slate-700 cursor-not-allowed">
+            <span class="material-symbols-outlined text-[24px]">chevron_right</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
     {% else %}
     <div class="premium-card p-20 flex flex-col items-center justify-center text-center">
         <div class="size-24 rounded-[2rem] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center mb-8 shadow-inner">
              <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-700">inventory_2</span>
         </div>
-        <h4 class="text-xl font-black text-slate-800 dark:text-white mb-3">No assets found</h4>
+        <h4 class="text-xl font-black text-slate-800 dark:text-white mb-3">No items found</h4>
         <p class="text-[13px] text-slate-400 font-bold max-w-sm leading-relaxed mb-10">There are no items matching this criteria. When you accept assignments, they will appear in your live inventory.</p>
         <a href="{% url 'vendor:pending_requests' %}"
            class="bg-primary text-white px-8 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95">

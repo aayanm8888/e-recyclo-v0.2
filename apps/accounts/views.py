@@ -643,20 +643,13 @@ def forgot_password_view(request):
                 request.session['reset_otp_time'] = timezone.now().isoformat()
                 
                 # Send OTP email
-                from django.core.mail import send_mail
-                try:
-                    send_mail(
-                        'Password Reset OTP - E-RECYCLO',
-                        f'Your password reset OTP is: {otp}\n\nThis OTP is valid for 10 minutes.',
-                        'noreply@erecyclo.com',
-                        [user.email],
-                        fail_silently=False,
-                    )
-                except:
-                    # In development, print to console
-                    print(f"\n{'='*50}")
-                    print(f"PASSWORD RESET OTP for {user.email}: {otp}")
-                    print(f"{'='*50}\n")
+                from apps.notifications.utils import send_password_reset_email
+                send_password_reset_email(user, otp)
+                
+                # In development (console fallback)
+                print(f"\n{'='*50}")
+                print(f"PASSWORD RESET OTP for {user.email}: {otp}")
+                print(f"{'='*50}\n")
                 
                 messages.success(request, f'Reset OTP sent to {email}.')
                 return redirect('accounts:verify_reset_otp')

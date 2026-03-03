@@ -182,7 +182,15 @@
                         {% if transaction_status == 'transferred' %}
                         <span class="status-badge bg-amber-50 text-amber-600 border border-amber-100">TRANSFERED</span>
                         {% else %}
-                        <span class="status-badge {{ post.get_status_badge_pilled_class }}">{{ post.get_vendor_status_tag }}</span>
+                        <span class="status-badge {{ post.get_status_badge_pilled_class }}">
+                            {% if post.status == 'collected' %}
+                                {% if post.vendor_declined_reevaluation %}CLIENT ACTION PENDING
+                                {% elif total_offers > 0 %}RE-VALUATION READY
+                                {% else %}VALUATION READY{% endif %}
+                            {% else %}
+                                {{ post.get_vendor_status_tag }}
+                            {% endif %}
+                        </span>
                         {% endif %}
                     </div>
                 </div>
@@ -195,12 +203,12 @@
                         </p>
                     </div>
 
-                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-3">
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-6 mb-3 -mt-[22px]">
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Quantity</p>
                             <p class="text-sm font-black text-slate-800 dark:text-slate-200">{{ post.quantity }} Unit{{ post.quantity|pluralize }}</p>
                         </div>
-                        <div class="min-w-0">
+                        <div class="min-w-0 -ml-[27px]">
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">AI Category</p>
                             <p class="text-sm font-black text-slate-800 dark:text-white truncate">{{ post.get_ai_category_display }}</p>
                         </div>
@@ -304,7 +312,12 @@
             <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
                 <span class="size-1.5 bg-amber-500 rounded-full"></span> Collector
             </h4>
-            {% if post.collector or post.return_collector %}
+            {% if post.status == 'return_requested' %}
+            <div class="flex items-center gap-4 py-2">
+                <span class="material-symbols-outlined text-slate-300 text-4xl animate-pulse">person_search</span>
+                <p class="text-sm font-bold text-slate-400">Finding collector nearby for return...</p>
+            </div>
+            {% elif post.collector or post.return_collector %}
             <div class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-5 min-w-0">
                     <div class="size-14 flex-shrink-0 rounded-full bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center border-2 border-white dark:border-slate-800 shadow-sm overflow-hidden text-amber-600">
@@ -313,7 +326,8 @@
                     <div class="min-w-0">
                         {% with c=post.return_collector|default:post.collector %}
                         <p class="text-[16px] font-extrabold text-slate-700 dark:text-white truncate">{{ c.get_full_name }}</p>
-                        <p class="text-xs font-bold text-slate-500 truncate mt-0.5">{{ c.phone_number }}</p>
+                        <p class="text-xs font-bold text-slate-500 truncate mt-0.5">{{ c.email }}</p>
+                        <p class="text-xs font-bold text-slate-500 mt-1">{{ c.phone_number }}</p>
                         {% if post.return_collector %}
                         <p class="text-[10px] font-extrabold text-amber-500 mt-1 uppercase tracking-widest">Return active</p>
                         {% endif %}
@@ -331,7 +345,7 @@
             {% else %}
             <div class="flex items-center gap-4 py-2">
                 <span class="material-symbols-outlined text-slate-300 text-4xl animate-pulse">person_search</span>
-                <p class="text-sm font-bold text-slate-400 ">Awaiting collector assignment...</p>
+                <p class="text-sm font-bold text-slate-400">Searching for collector...</p>
             </div>
             {% endif %}
         </div>
@@ -354,11 +368,21 @@
     <div class="flex flex-wrap gap-6 mb-20 justify-center items-center mt-10">
         {% if is_current_vendor %}
             {% if post.status == 'collected' and not post.vendor_declined_reevaluation %}
-                <a href="{% url 'vendor:evaluate_item' post.pk %}"
-                    class="w-[280px] bg-primary text-white py-5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:scale-105 flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-sm font-bold">rate_review</span> 
-                    {% if post.rejection_count > 0 %}Prepare Re-evaluation{% else %}Perform Evaluation{% endif %}
-                </a>
+                <div class="flex flex-col sm:flex-row gap-6 items-center">
+                    {% if total_offers > 0 %}
+                    <a href="{% url 'vendor:decline_reevaluation' post.pk %}"
+                        class="w-[310px] bg-slate-900 text-white hover:bg-black py-5 rounded-xl font-black text-xs uppercase tracking-widest transition-all hover:scale-105 flex items-center justify-center gap-2 shadow-xl shadow-slate-900/10">
+                        <span class="material-symbols-outlined text-sm font-bold">cancel_presentation</span> 
+                        Decline Re-evaluation
+                    </a>
+                    {% endif %}
+
+                    <a href="{% url 'vendor:evaluate_item' post.pk %}"
+                        class="w-[310px] bg-primary hover:bg-forest text-white py-5 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all hover:scale-105 flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined text-sm font-bold">rate_review</span> 
+                        {% if total_offers > 0 %}Prepare Re-evaluation{% else %}Perform Evaluation{% endif %}
+                    </a>
+                </div>
             {% endif %}
         {% endif %}
     </div>
@@ -437,29 +461,71 @@
                                             </div>
                                         </div>
 
-                                        <!-- Client Response (Received - Left Aligned) -->
-                                        {% if eval.rejection_reason %}
-                                        <div class="flex flex-col items-start mt-2">
-                                            <div class="p-5 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100/50 rounded-xl w-4/5 sm:w-3/5 relative shadow-md">
-                                                <div class="flex items-center gap-3 mb-2 justify-start">
-                                                    <span class="material-symbols-outlined text-xs text-indigo-400">chat</span>
-                                                    <span class="text-[9px] font-extrabold tracking-widest uppercase text-indigo-600">Re-evaluation Requested</span>
+                                        <!-- Vendor Declined Re-evaluation (right-aligned, vendor action) -->
+                                        {% if forloop.last and vh.is_current and post.vendor_declined_reevaluation %}
+                                        <div class="flex flex-col items-end">
+                                            <div class="p-4 bg-rose-50/50 dark:bg-rose-900/10 border border-rose-100/50 rounded-xl w-4/5 sm:w-3/5 shadow-md">
+                                                <div class="flex items-center gap-3 justify-end">
+                                                    <span class="text-[9px] font-extrabold tracking-widest uppercase text-rose-600">Declined Re-evaluation</span>
+                                                    <span class="material-symbols-outlined text-xs text-rose-400">cancel</span>
                                                 </div>
-                                                <p class="text-[11px] font-bold text-indigo-700 dark:text-indigo-300 text-left mb-2">"{{ eval.rejection_reason }}"</p>
-                                                {% if eval.client_requested_value %}
-                                                <div class="flex items-center justify-start gap-2">
-                                                    <span class="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Counter:</span>
-                                                    <span class="text-sm font-black text-indigo-700 dark:text-indigo-400">₹{{ eval.client_requested_value }}</span>
-                                                </div>
-                                                {% endif %}
                                             </div>
                                         </div>
-                                        {% elif eval.client_accepted or vh.final_status == 'completed' and forloop.last %}
-                                        <div class="flex flex-col items-start mt-2">
-                                            <div class="p-5 bg-emerald-50/50 dark:bg-emerald-900/10 border border-emerald-100/50 rounded-xl w-4/5 sm:w-3/5 relative shadow-md">
-                                                <div class="flex items-center gap-3 justify-start">
-                                                    <span class="material-symbols-outlined text-xs text-emerald-400">check_circle</span>
-                                                    <span class="text-[9px] font-extrabold tracking-widest uppercase text-emerald-600">Offer Accepted</span>
+                                        {% endif %}
+
+                                        <!-- Client Response (Left Aligned) — mirrors client upload_detail exactly -->
+                                        {% if eval.client_choice or eval.rejected_by_client or vh.final_status == 'completed' and forloop.last %}
+                                        <div class="flex flex-col items-start">
+                                            <div class="p-5 rounded-xl border w-4/5 sm:w-3/5 relative shadow-md
+                                                {% if eval.client_choice == 'accepted' or vh.final_status == 'completed' and forloop.last %}
+                                                    bg-emerald-50/50 dark:bg-emerald-900/10 border-emerald-100/50
+                                                {% elif eval.client_choice == 'return' or eval.client_choice == 'transfer' %}
+                                                    bg-amber-50/50 dark:bg-amber-900/10 border-amber-100/50
+                                                {% else %}
+                                                    bg-indigo-50/50 dark:bg-indigo-900/10 border-indigo-100/50
+                                                {% endif %}">
+                                                <div class="flex items-center gap-3 mb-2 justify-start">
+                                                    <span class="material-symbols-outlined text-xs
+                                                        {% if eval.client_choice == 'accepted' or vh.final_status == 'completed' and forloop.last %}text-emerald-400
+                                                        {% elif eval.client_choice == 'return' %}text-amber-400
+                                                        {% elif eval.client_choice == 'transfer' %}text-amber-400
+                                                        {% else %}text-indigo-400{% endif %}">
+                                                        {% if eval.client_choice == 'accepted' or vh.final_status == 'completed' and forloop.last %}check_circle
+                                                        {% elif eval.client_choice == 'return' %}assignment_return
+                                                        {% elif eval.client_choice == 'transfer' %}local_shipping
+                                                        {% else %}chat{% endif %}
+                                                    </span>
+                                                    <span class="text-[9px] font-extrabold tracking-widest uppercase
+                                                        {% if eval.client_choice == 'accepted' or vh.final_status == 'completed' and forloop.last %}text-emerald-600
+                                                        {% elif eval.client_choice == 'return' or eval.client_choice == 'transfer' %}text-amber-600
+                                                        {% else %}text-indigo-600{% endif %}">
+                                                        {% if eval.client_choice %}{{ eval.get_client_choice_display }}{% elif vh.final_status == 'completed' and forloop.last %}Accepted Offer{% else %}Re-evaluation Requested{% endif %}
+                                                    </span>
+                                                </div>
+                                                <div class="space-y-2">
+                                                    {% if eval.client_requested_value %}
+                                                    <div class="flex items-center justify-start gap-2">
+                                                        <span class="text-[8px] font-black text-indigo-400 uppercase tracking-widest">Counter:</span>
+                                                        <span class="text-sm font-black text-indigo-700 dark:text-indigo-400">₹{{ eval.client_requested_value }}</span>
+                                                    </div>
+                                                    {% endif %}
+                                                    <p class="text-[11px] font-bold text-left leading-relaxed
+                                                        {% if eval.client_choice == 'accepted' or vh.final_status == 'completed' and forloop.last %}text-emerald-800 dark:text-emerald-300
+                                                        {% elif eval.client_choice == 'return' or eval.client_choice == 'transfer' %}text-amber-800 dark:text-amber-300
+                                                        {% else %}text-indigo-800 dark:text-indigo-300{% endif %}">
+                                                        {% if eval.rejection_reason %}
+                                                            <span class="block text-[9px] text-indigo-400 uppercase tracking-widest mb-1">Client Remark</span>
+                                                            {{ eval.rejection_reason }}
+                                                        {% elif eval.client_choice == 'accepted' or vh.final_status == 'completed' and forloop.last %}
+                                                            I accept this offer. Proceed with recycling.
+                                                        {% elif eval.client_choice == 'return' %}
+                                                            I'd like my item back. Please initiate return pickup.
+                                                        {% elif eval.client_choice == 'transfer' %}
+                                                            I want to try another recycler for this item.
+                                                        {% else %}
+                                                            I am requesting a re-evaluation of this price.
+                                                        {% endif %}
+                                                    </p>
                                                 </div>
                                             </div>
                                         </div>

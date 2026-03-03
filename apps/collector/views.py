@@ -218,8 +218,13 @@ def available_pickups(request):
     # Sort by distance
     nearby_pickups.sort(key=lambda x: x['distance'])
     
+    from django.core.paginator import Paginator
+    paginator = Paginator(nearby_pickups, 10)
+    page_number = request.GET.get('page')
+    pickups_page = paginator.get_page(page_number)
+    
     return render(request, 'collector/available_pickups.html', {
-        'pickups': nearby_pickups,
+        'pickups': pickups_page,
         'total_count': len(nearby_pickups),
         'vehicle_type': vehicle_type,
     })
@@ -427,8 +432,13 @@ def my_pickups(request):
         'cancelled': base.filter(status='cancelled').count(),
     }
     
+    from django.core.paginator import Paginator
+    paginator = Paginator(qs, 10)
+    page_number = request.GET.get('page')
+    pickups_page = paginator.get_page(page_number)
+    
     return render(request, 'collector/my_pickups.html', {
-        'pickups': qs,
+        'pickups': pickups_page,
         'status_filter': status_filter,
         'counts': counts,
     })

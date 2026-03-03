@@ -15,4 +15,11 @@ urlpatterns = [
     path('reject/<int:pk>/', views.reject_profile, name='reject_profile'),
     path('users/', views.users, name='users'),
     path('analytics/', views.analytics, name='analytics'),
+    
+    # Generic CRUD
+    path('models/', views.model_list, name='model_list'),
+    path('models/<str:app_label>/<str:model_name>/', views.model_items, name='model_items'),
+    path('models/<str:app_label>/<str:model_name>/add/', views.model_edit, name='model_add'),
+    path('models/<str:app_label>/<str:model_name>/<int:pk>/', views.model_edit, name='model_edit'),
+    path('models/<str:app_label>/<str:model_name>/<int:pk>/delete/', views.model_delete, name='model_delete'),
 ]

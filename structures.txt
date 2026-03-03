@@ -6,10 +6,9 @@ B:.
 |   check
 |   fix_blocks.py
 |   manage.py
-|   requirement.txt
 |   requirements.txt
+|   runtime.txt
 |   structures.txt
-|   test_email.py
 |   
 +---apps
 |   |   __init__.py
@@ -31,6 +30,7 @@ B:.
 |   |   |   |   0001_initial.py
 |   |   |   |   0002_add_all_fields.py
 |   |   |   |   0003_profilecompletion_rejection_fields.py
+|   |   |   |   0004_clientprofile_latitude_clientprofile_longitude.py
 |   |   |   |   __init__.py
 |   |   |   |   
 |   |   |   \---__pycache__
@@ -38,6 +38,7 @@ B:.
 |   |   |           0002_add_all_fields.cpython-310.pyc
 |   |   |           0003_document_id_numbers.cpython-310.pyc
 |   |   |           0003_profilecompletion_rejection_fields.cpython-310.pyc
+|   |   |           0004_clientprofile_latitude_clientprofile_longitude.cpython-310.pyc
 |   |   |           __init__.cpython-310.pyc
 |   |   |           
 |   |   \---__pycache__
@@ -147,6 +148,8 @@ B:.
 |   |   |   |   0008_photopost_weight_size.py
 |   |   |   |   0009_alter_photopost_ai_category_and_more.py
 |   |   |   |   0010_alter_photopost_ai_category.py
+|   |   |   |   0011_evaluationhistory_client_accepted_and_more.py
+|   |   |   |   0012_evaluationhistory_client_requested_value.py
 |   |   |   |   __init__.py
 |   |   |   |   
 |   |   |   \---__pycache__
@@ -165,6 +168,8 @@ B:.
 |   |   |           0008_photopost_weight_size.cpython-310.pyc
 |   |   |           0009_alter_photopost_ai_category_and_more.cpython-310.pyc
 |   |   |           0010_alter_photopost_ai_category.cpython-310.pyc
+|   |   |           0011_evaluationhistory_client_accepted_and_more.cpython-310.pyc
+|   |   |           0012_evaluationhistory_client_requested_value.cpython-310.pyc
 |   |   |           __init__.cpython-310.pyc
 |   |   |           
 |   |   \---__pycache__
@@ -319,12 +324,19 @@ B:.
 |       
 +---media
 |   +---certificates
+|   +---client_profiles
+|   |       profile_2_03a265ce.png
+|   |       profile_2_55441ef6.png
+|   |       profile_2_58a8c1a7.png
+|   |       profile_2_8d96990b.png
+|   |       
 |   +---collector
 |   |   +---aadhaar
 |   |   |       id-aadhar.jpeg
 |   |   |       id-aadhar_2yL81oF.jpeg
 |   |   |       id-aadhar_CTYGisc.jpeg
 |   |   |       id-aadhar_DOWP9HX.jpeg
+|   |   |       id-aadhar_WrLQPdK.jpeg
 |   |   |       id-aadhar_XXZuGwG.jpeg
 |   |   |       id-aadhar_YEhkM2p.jpeg
 |   |   |       
@@ -335,6 +347,7 @@ B:.
 |   |   |       Business-License_FzDLLb9.png
 |   |   |       Business-License_NTlE0Et.png
 |   |   |       Business-License_QkVnc4V.png
+|   |   |       Business-License_Ra5Qc03.png
 |   |   |       
 |   |   +---profile_photos
 |   |   |       kaggle_2_002321.jpg
@@ -343,9 +356,11 @@ B:.
 |   |   |       profile-pic_EPQootg.jpg
 |   |   |       profile-pic_eZV4uG9.jpg
 |   |   |       profile-pic_Vk0KzNb.jpg
+|   |   |       profile-pic_wU9j1tT.jpg
 |   |   |       
 |   |   \---vehicle_rc
 |   |           epr-e-waste.png
+|   |           epr-e-waste_PqXpdZc.png
 |   |           gst-registration-certificate.jpg
 |   |           gst-registration-certificate_FIQmxD3.jpg
 |   |           gst-registration-certificate_mDMY3um.jpg
@@ -354,72 +369,86 @@ B:.
 |   |           
 |   +---e-photos
 |   |   \---2026
-|   |       \---02
-|   |               00CkSN8iwRrrd090mXsYaJt-3.fit_scale.size_1028x578.v1653575783.jpg
-|   |               00CkSN8iwRrrd090mXsYaJt-3.fit_scale.size_1028x578.v1653575783_m62NIvX.jpg
-|   |               battery.jpg
-|   |               kaggle_1_000077.jpg
-|   |               kaggle_1_000077_VnbbLFN.jpg
-|   |               kaggle_1_000078.jpg
-|   |               kaggle_1_000078_f3NGovu.jpg
-|   |               kaggle_1_000079.jpg
-|   |               kaggle_1_000079_G8BTAMF.jpg
-|   |               kaggle_1_000092.jpg
-|   |               kaggle_1_000107.jpg
-|   |               kaggle_1_000119.jpg
-|   |               kaggle_1_000123.jpg
-|   |               kaggle_1_000197.jpg
-|   |               kaggle_1_000227.jpg
-|   |               kaggle_1_000247.jpg
-|   |               kaggle_1_000264.jpg
-|   |               kaggle_1_000735.png
-|   |               kaggle_1_001116.png
-|   |               kaggle_2_000003.jpg
-|   |               kaggle_2_000004.jpg
-|   |               kaggle_2_000005.jpg
-|   |               kaggle_2_000008.jpg
-|   |               kaggle_2_000009.jpg
-|   |               kaggle_2_000009_bmnz5GZ.jpg
-|   |               kaggle_2_000009_lnIpFNI.jpg
-|   |               kaggle_2_000010.jpg
-|   |               kaggle_2_000067.jpg
-|   |               kaggle_2_000087.jpg
-|   |               kaggle_2_000135.jpg
-|   |               kaggle_2_000611.jpg
-|   |               kaggle_2_001361.jpg
-|   |               kaggle_2_001467.jpg
-|   |               kaggle_2_002318.jpg
-|   |               kaggle_2_002320.jpg
-|   |               kaggle_2_002320_HsV54uY.jpg
-|   |               kaggle_2_002320_ztCRAOP.jpg
-|   |               kaggle_2_002324.jpg
-|   |               kaggle_2_002325.jpg
-|   |               kaggle_2_002367.jpg
-|   |               kaggle_2_002369.jpg
-|   |               kaggle_2_002373.jpg
-|   |               kaggle_2_002392.jpg
-|   |               kaggle_2_002400.jpg
-|   |               kaggle_2_002408.jpg
-|   |               kaggle_2_002413.jpg
-|   |               kaggle_2_002415.jpg
-|   |               kaggle_2_002431.jpg
-|   |               kaggle_2_002480.jpg
-|   |               kaggle_2_002537.jpg
-|   |               kaggle_2_002543.jpg
-|   |               kaggle_2_002557.jpg
-|   |               kaggle_2_002645.jpg
-|   |               kaggle_2_002681.jpg
-|   |               kaggle_2_002760.jpg
-|   |               kaggle_2_003550.jpg
-|   |               kaggle_2_003768.jpg
-|   |               kaggle_2_003860.jpg
-|   |               kaggle_2_004869.jpg
-|   |               kaggle_2_005310.jpg
-|   |               keyboard.jpg
-|   |               laptop.webp
-|   |               laptop_LwgopnG.webp
-|   |               microwave.jpg
-|   |               mouse.jpeg
+|   |       +---02
+|   |       |       00CkSN8iwRrrd090mXsYaJt-3.fit_scale.size_1028x578.v1653575783.jpg
+|   |       |       00CkSN8iwRrrd090mXsYaJt-3.fit_scale.size_1028x578.v1653575783_m62NIvX.jpg
+|   |       |       battery.jpg
+|   |       |       kaggle_1_000072.jpg
+|   |       |       kaggle_1_000075.jpg
+|   |       |       kaggle_1_000075_lCm6CwY.jpg
+|   |       |       kaggle_1_000077.jpg
+|   |       |       kaggle_1_000077_VnbbLFN.jpg
+|   |       |       kaggle_1_000078.jpg
+|   |       |       kaggle_1_000078_f3NGovu.jpg
+|   |       |       kaggle_1_000079.jpg
+|   |       |       kaggle_1_000079_G8BTAMF.jpg
+|   |       |       kaggle_1_000079_tkLaHN6.jpg
+|   |       |       kaggle_1_000092.jpg
+|   |       |       kaggle_1_000107.jpg
+|   |       |       kaggle_1_000119.jpg
+|   |       |       kaggle_1_000123.jpg
+|   |       |       kaggle_1_000197.jpg
+|   |       |       kaggle_1_000227.jpg
+|   |       |       kaggle_1_000247.jpg
+|   |       |       kaggle_1_000264.jpg
+|   |       |       kaggle_1_000735.png
+|   |       |       kaggle_1_001116.png
+|   |       |       kaggle_2_000003.jpg
+|   |       |       kaggle_2_000003_cwY1gd3.jpg
+|   |       |       kaggle_2_000004.jpg
+|   |       |       kaggle_2_000004_yOi4C5A.jpg
+|   |       |       kaggle_2_000005.jpg
+|   |       |       kaggle_2_000008.jpg
+|   |       |       kaggle_2_000009.jpg
+|   |       |       kaggle_2_000009_bmnz5GZ.jpg
+|   |       |       kaggle_2_000009_lnIpFNI.jpg
+|   |       |       kaggle_2_000009_t7Iv9rQ.jpg
+|   |       |       kaggle_2_000010.jpg
+|   |       |       kaggle_2_000067.jpg
+|   |       |       kaggle_2_000087.jpg
+|   |       |       kaggle_2_000135.jpg
+|   |       |       kaggle_2_000611.jpg
+|   |       |       kaggle_2_001361.jpg
+|   |       |       kaggle_2_001467.jpg
+|   |       |       kaggle_2_002316.jpg
+|   |       |       kaggle_2_002318.jpg
+|   |       |       kaggle_2_002320.jpg
+|   |       |       kaggle_2_002320_HsV54uY.jpg
+|   |       |       kaggle_2_002320_ztCRAOP.jpg
+|   |       |       kaggle_2_002324.jpg
+|   |       |       kaggle_2_002325.jpg
+|   |       |       kaggle_2_002367.jpg
+|   |       |       kaggle_2_002369.jpg
+|   |       |       kaggle_2_002373.jpg
+|   |       |       kaggle_2_002392.jpg
+|   |       |       kaggle_2_002400.jpg
+|   |       |       kaggle_2_002408.jpg
+|   |       |       kaggle_2_002413.jpg
+|   |       |       kaggle_2_002415.jpg
+|   |       |       kaggle_2_002431.jpg
+|   |       |       kaggle_2_002480.jpg
+|   |       |       kaggle_2_002537.jpg
+|   |       |       kaggle_2_002543.jpg
+|   |       |       kaggle_2_002557.jpg
+|   |       |       kaggle_2_002645.jpg
+|   |       |       kaggle_2_002681.jpg
+|   |       |       kaggle_2_002760.jpg
+|   |       |       kaggle_2_003550.jpg
+|   |       |       kaggle_2_003768.jpg
+|   |       |       kaggle_2_003860.jpg
+|   |       |       kaggle_2_004869.jpg
+|   |       |       kaggle_2_005310.jpg
+|   |       |       keyboard.jpg
+|   |       |       laptop.webp
+|   |       |       laptop_LwgopnG.webp
+|   |       |       microwave.jpg
+|   |       |       mouse.jpeg
+|   |       |       
+|   |       \---03
+|   |               kaggle_1_000073.jpg
+|   |               kaggle_1_000080.jpg
+|   |               kaggle_1_001280.png
+|   |               WhatsApp_Image_2026-03-02_at_11.22.47_PM.jpeg
 |   |               
 |   +---vendor
 |   |   +---business_licenses
@@ -689,6 +718,7 @@ B:.
 |   |   home.html
 |   |   
 |   +---accounts
+|   |       change_password.html
 |   |       complete_collector_profile.html
 |   |       complete_vendor_profile.html
 |   |       edit_profile.html
@@ -703,6 +733,10 @@ B:.
 |   +---admin_custom
 |   |       analytics.html
 |   |       dashboard.html
+|   |       model_confirm_delete.html
+|   |       model_form.html
+|   |       model_items.html
+|   |       model_list.html
 |   |       pending_approvals.html
 |   |       users.html
 |   |       
@@ -734,6 +768,7 @@ B:.
 |   |       sidebar.html
 |   |       
 |   +---emails
+|   |       password_reset.html
 |   |       profile_approved.html
 |   |       verify_email.html
 |   |       
@@ -11114,6 +11149,23 @@ B:.
     |       |           views.cpython-310.pyc
     |       |           widgets.cpython-310.pyc
     |       |           __init__.cpython-310.pyc
+    |       |           
+    |       +---dj_database_url
+    |       |   |   py.typed
+    |       |   |   __init__.py
+    |       |   |   
+    |       |   \---__pycache__
+    |       |           __init__.cpython-310.pyc
+    |       |           
+    |       +---dj_database_url-3.1.2.dist-info
+    |       |   |   INSTALLER
+    |       |   |   METADATA
+    |       |   |   RECORD
+    |       |   |   REQUESTED
+    |       |   |   WHEEL
+    |       |   |   
+    |       |   \---licenses
+    |       |           LICENSE
     |       |           
     |       +---filelock
     |       |   |   asyncio.py

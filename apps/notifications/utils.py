@@ -270,3 +270,63 @@ E-RECYCLO Team
     except Exception as e:
         logger.error(f"Failed to send welcome email to {user.email}: {str(e)}")
         return False
+
+
+def send_password_reset_email(user, otp):
+    """
+    Send password reset OTP in premium HTML format
+    """
+    try:
+        context = {
+            'user': user,
+            'otp': otp,
+            'expires_in': '10 minutes',
+            'year': timezone.now().year
+        }
+        
+        # Render HTML email
+        html_message = render_to_string('emails/password_reset.html', context)
+        
+        # Plain text version
+        plain_message = f"""
+Hi {user.get_full_name()},
+
+We received a request to reset your password for your E-RECYCLO account. 
+
+Your password reset OTP is: {otp}
+
+This code will expire in 10 minutes.
+
+Important:
+- Don't share this code with anyone
+- If you didn't request this, please ignore this email and secure your account immediately.
+
+Thanks,
+E-RECYCLO Team
+
+---
+This is an automated email. Please do not reply.
+Questions? Contact: support@erecyclo.com
+        """.strip()
+        
+        # Send email
+        subject = '🔐 Reset Your Password - E-RECYCLO'
+        from_email = settings.DEFAULT_FROM_EMAIL
+        recipient_list = [user.email]
+        
+        # Use EmailMultiAlternatives for HTML email
+        email = EmailMultiAlternatives(
+            subject=subject,
+            body=plain_message,
+            from_email=from_email,
+            to=recipient_list
+        )
+        email.attach_alternative(html_message, "text/html")
+        email.send(fail_silently=False)
+        
+        logger.info(f"Password reset email sent to {user.email}")
+        return True
+    
+    except Exception as e:
+        logger.error(f"Failed to send password reset email to {user.email}: {str(e)}")
+        return False

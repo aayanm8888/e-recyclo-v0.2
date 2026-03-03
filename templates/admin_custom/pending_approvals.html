@@ -1,201 +1,279 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block page_title %}Credential Review{% endblock %}
+{% block page_subtitle %}Authorize system access for verifying partners{% endblock %}
+
+{% block extra_css %}
+<style>
+    .approvals-hero-bg {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+        border-radius: 3rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .premium-card {
+        background: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 3rem;
+    }
+    .dark .premium-card {
+        background: #1e293b;
+        border-color: rgba(255, 255, 255, 0.05);
+    }
+    .glass-pill {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 9999px;
+    }
+</style>
+{% endblock %}
 
 {% block page_content %}
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <h2 class="text-2xl font-bold text-gray-900">Pending Profile Approvals</h2>
-        <span class="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg font-semibold">
-            {{ approvals.count }} Pending
-        </span>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12 pb-24">
+    <!-- ── APPROVALS HERO ── -->
+    <div class="approvals-hero-bg py-16 px-12 text-white relative group shadow-2xl animate-in fade-in zoom-in duration-700">
+        <!-- Accent Glows -->
+        <div class="absolute top-0 right-0 w-80 h-80 bg-amber-500/10 rounded-full -mr-20 -mt-20 blur-[120px]"></div>
+        <div class="absolute bottom-0 left-1/4 w-80 h-80 bg-primary/10 rounded-full blur-[100px] animate-pulse"></div>
+        
+        <div class="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+            <div class="space-y-6 flex-1">
+                <div class="inline-flex items-center gap-3 glass-pill px-5 py-2">
+                    <span class="material-symbols-outlined text-[20px] text-amber-500">verified_user</span>
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">Ecosystem Verification Node</span>
+                </div>
+                <h1 class="text-6xl font-black tracking-tighter leading-none mt-2">Partner<span class="text-primary">.</span>Review</h1>
+                <p class="text-white/50 text-sm font-bold max-w-sm leading-relaxed pt-2">
+                    Review legal credentials and authorize vendors and collectors to join the e-waste management network.
+                </p>
+                <div class="flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.2em] text-amber-400">
+                    <span class="size-2 bg-amber-500 rounded-full animate-pulse"></span>
+                    {{ approvals.count }} Nodes waiting for authority
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <div class="bg-white rounded-lg shadow">
-        {% if approvals %}
-            <div class="divide-y">
-                {% for approval in approvals %}
-                    <div class="p-6 hover:bg-gray-50">
-                        <div class="flex items-start justify-between">
-                            <!-- User Info -->
-                            <div class="flex-1">
-                                <div class="flex items-center space-x-4 mb-4">
-                                    <div class="w-16 h-16 bg-nature-500 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                                        {{ approval.user.first_name.0 }}{{ approval.user.last_name.0 }}
-                                    </div>
-                                    <div>
-                                        <h3 class="text-lg font-bold text-gray-900">{{ approval.user.get_full_name }}</h3>
-                                        <p class="text-sm text-gray-600">{{ approval.user.email }}</p>
-                                        <p class="text-sm text-gray-600">{{ approval.user.phone_number }}</p>
-                                        <span class="inline-block mt-1 px-3 py-1 text-xs font-medium rounded-full
-                                            {% if approval.user.is_vendor %}bg-green-100 text-green-800
-                                            {% else %}bg-purple-100 text-purple-800{% endif %}">
-                                            {{ approval.user.get_role }}
-                                        </span>
-                                    </div>
-                                </div>
-                                
-                                <!-- Profile Details -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                    {% if approval.user.is_vendor %}
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Business Information</h4>
-                                            <div class="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
-                                                <p><strong>Company:</strong> {{ approval.user.vendor_profile.company_name }}</p>
-                                                <p><strong>Contact Person:</strong> {{ approval.user.vendor_profile.contact_person }}</p>
-                                                <p><strong>Alternate Phone:</strong> {{ approval.user.vendor_profile.alternate_phone|default:"N/A" }}</p>
-                                                <p><strong>Address:</strong> {{ approval.user.vendor_profile.business_address }}</p>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Documents</h4>
-                                            <div class="space-y-2 text-sm">
-                                                <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                                                    <span>Business License</span>
-                                                    {% if approval.user.vendor_profile.business_license %}
-                                                        <a href="{{ approval.user.vendor_profile.business_license.url }}" target="_blank" class="text-nature-600 hover:underline">View</a>
-                                                    {% else %}
-                                                        <span class="text-red-600">Missing</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                                                    <span>GST Certificate</span>
-                                                    {% if approval.user.vendor_profile.gst_certificate %}
-                                                        <a href="{{ approval.user.vendor_profile.gst_certificate.url }}" target="_blank" class="text-nature-600 hover:underline">View</a>
-                                                    {% else %}
-                                                        <span class="text-red-600">Missing</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                                                    <span>E-Waste Authorization</span>
-                                                    {% if approval.user.vendor_profile.ewaste_authorization %}
-                                                        <a href="{{ approval.user.vendor_profile.ewaste_authorization.url }}" target="_blank" class="text-nature-600 hover:underline">View</a>
-                                                    {% else %}
-                                                        <span class="text-red-600">Missing</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                                                    <span>ID Proof</span>
-                                                    {% if approval.user.vendor_profile.id_proof %}
-                                                        <a href="{{ approval.user.vendor_profile.id_proof.url }}" target="_blank" class="text-nature-600 hover:underline">View</a>
-                                                    {% else %}
-                                                        <span class="text-red-600">Missing</span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% elif approval.user.is_collector %}
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Personal Information</h4>
-                                            <div class="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
-                                                <p><strong>DOB:</strong> {{ approval.user.collector_profile.date_of_birth|date:"M d, Y" }}</p>
-                                                <p><strong>Address:</strong> {{ approval.user.collector_profile.address }}</p>
-                                                <p><strong>Vehicle:</strong> {{ approval.user.collector_profile.get_vehicle_type_display }}</p>
-                                                <p><strong>Vehicle No:</strong> {{ approval.user.collector_profile.vehicle_number }}</p>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Documents</h4>
-                                            <div class="space-y-2 text-sm">
-                                                <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                                                    <span>Driving License</span>
-                                                    {% if approval.user.collector_profile.driving_license %}
-                                                        <a href="{{ approval.user.collector_profile.driving_license.url }}" target="_blank" class="text-nature-600 hover:underline">View</a>
-                                                    {% else %}
-                                                        <span class="text-red-600">Missing</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                                                    <span>Aadhaar Card</span>
-                                                    {% if approval.user.collector_profile.aadhaar_card %}
-                                                        <a href="{{ approval.user.collector_profile.aadhaar_card.url }}" target="_blank" class="text-nature-600 hover:underline">View</a>
-                                                    {% else %}
-                                                        <span class="text-red-600">Missing</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="flex items-center justify-between bg-gray-50 rounded p-2">
-                                                    <span>Vehicle RC</span>
-                                                    {% if approval.user.collector_profile.vehicle_rc %}
-                                                        <a href="{{ approval.user.collector_profile.vehicle_rc.url }}" target="_blank" class="text-nature-600 hover:underline">View</a>
-                                                    {% else %}
-                                                        <span class="text-red-600">Missing</span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <!-- Submission Info -->
-                                <div class="bg-blue-50 rounded-lg p-3 text-sm">
-                                    <p><strong>Profile Completion:</strong> {{ approval.completion_percentage }}%</p>
-                                    <p><strong>Submitted:</strong> {{ approval.submitted_at|date:"M d, Y H:i" }}</p>
-                                    {% if approval.missing_fields %}
-                                        <p class="text-red-600 mt-2"><strong>Missing Fields:</strong> {{ approval.missing_fields|join:", " }}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            
-                            <!-- Actions -->
-                            <div class="ml-6 flex flex-col gap-2">
-                                <form method="POST" action="{% url 'admin_custom:approve_profile' approval.pk %}">
-                                    {% csrf_token %}
-                                    <button type="submit" onclick="return confirm('Approve this profile?')" 
-                                            class="w-full px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors">
-                                        ✓ Approve
-                                    </button>
-                                </form>
-                                
-                                <button onclick="showRejectModal({{ approval.pk }})" 
-                                        class="w-full px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors">
-                                    ✗ Reject
-                                </button>
-                            </div>
+
+    <!-- ── PENDING REQUESTS STREAM ── -->
+    <div class="space-y-8">
+        {% for approval in approvals %}
+        <div class="premium-card overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group border-none">
+            <div class="p-10 flex flex-col lg:flex-row gap-12">
+                <!-- User Profile Side -->
+                <div class="lg:w-1/4 flex flex-col items-center text-center p-8 bg-slate-50/50 dark:bg-slate-800/30 rounded-[3rem] border border-slate-100 dark:border-slate-800/60 shadow-inner">
+                    <div class="size-28 rounded-[2.5rem] bg-gradient-to-br from-primary to-forest flex items-center justify-center text-white font-black text-3xl shadow-2xl shadow-primary/30 mb-8 group-hover:scale-105 transition-transform duration-500 overflow-hidden relative">
+                         {{ approval.user.first_name.0 }}{{ approval.user.last_name.0 }}
+                         <div class="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors"></div>
+                    </div>
+                    
+                    <div class="space-y-1">
+                        <h3 class="text-xl font-black text-slate-800 dark:text-white leading-tight tracking-tight">{{ approval.user.get_full_name }}</h3>
+                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest break-all opacity-80 mt-1">{{ approval.user.email }}</p>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <span class="inline-flex items-center px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md
+                            {% if approval.user.is_vendor %}bg-green-500 text-white
+                            {% else %}bg-purple-600 text-white{% endif %}">
+                            {{ approval.user.get_role|upper }}
+                        </span>
+                    </div>
+                    
+                    <div class="mt-10 w-full space-y-4">
+                        <div class="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                            <span>Trust Profile</span>
+                            <span class="text-primary">{{ approval.completion_percentage }}%</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+                            <div class="h-full bg-primary rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(23,207,23,0.3)]" style="width: {{ approval.completion_percentage }}%"></div>
                         </div>
                     </div>
-                {% endfor %}
+                </div>
+
+                <!-- Document Grid -->
+                <div class="flex-1 space-y-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        {% if approval.user.is_vendor %}
+                            <!-- Vendor Business Data -->
+                            <div class="space-y-5">
+                                <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">domain</span> Entity Context
+                                </h4>
+                                <div class="bg-slate-50 dark:bg-slate-800/40 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800/60 shadow-inner space-y-5">
+                                    <div class="space-y-1">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registered Name</p>
+                                        <p class="text-[15px] font-black text-slate-800 dark:text-white">{{ approval.user.vendor_profile.company_name }}</p>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Managing Partner</p>
+                                        <p class="text-[15px] font-black text-slate-800 dark:text-white">{{ approval.user.vendor_profile.contact_person }}</p>
+                                    </div>
+                                    <div class="pt-4 border-t border-slate-200/60 dark:border-slate-700/60">
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Facility Mapping</p>
+                                        <p class="text-[13px] font-bold text-slate-500 dark:text-slate-300 leading-relaxed">{{ approval.user.vendor_profile.business_address|truncatechars:100 }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Vendor Documents -->
+                            <div class="space-y-5">
+                                <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">verified_user</span> Legal Repository
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4">
+                                    {% with vp=approval.user.vendor_profile %}
+                                    <a href="{{ vp.business_license.url }}" target="_blank" class="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800/60 rounded-3xl hover:border-primary hover:shadow-2xl hover:-translate-y-1 transition-all group/doc">
+                                        <span class="material-symbols-outlined text-3xl text-slate-200 group-hover/doc:text-primary mb-3">file_present</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Licensing</span>
+                                    </a>
+                                    <a href="{{ vp.gst_certificate.url }}" target="_blank" class="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800/60 rounded-3xl hover:border-primary hover:shadow-2xl hover:-translate-y-1 transition-all group/doc">
+                                        <span class="material-symbols-outlined text-3xl text-slate-200 group-hover/doc:text-primary mb-3">account_balance</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Tax Cert</span>
+                                    </a>
+                                    <a href="{{ vp.ewaste_authorization.url }}" target="_blank" class="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800/60 rounded-3xl hover:border-primary hover:shadow-2xl hover:-translate-y-1 transition-all group/doc">
+                                        <span class="material-symbols-outlined text-3xl text-slate-200 group-hover/doc:text-primary mb-3">policy</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Auth Code</span>
+                                    </a>
+                                    <a href="{{ vp.id_proof.url }}" target="_blank" class="flex flex-col items-center justify-center p-5 bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800/60 rounded-3xl hover:border-primary hover:shadow-2xl hover:-translate-y-1 transition-all group/doc">
+                                        <span class="material-symbols-outlined text-3xl text-slate-200 group-hover/doc:text-primary mb-3">badge</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Identity</span>
+                                    </a>
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        {% elif approval.user.is_collector %}
+                            <!-- Collector Data -->
+                            <div class="space-y-5">
+                                <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">account_box</span> Personal Mapping
+                                </h4>
+                                <div class="bg-slate-50 dark:bg-slate-800/40 rounded-[2.5rem] p-8 border border-slate-100 dark:border-slate-800/60 shadow-inner space-y-6">
+                                    <div class="flex justify-between items-center">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Birth Epoch</p>
+                                        <p class="text-[14px] font-black text-slate-800 dark:text-white">{{ approval.user.collector_profile.date_of_birth|date:"M d, Y" }}</p>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Fleet Class</p>
+                                        <p class="text-[14px] font-black text-slate-800 dark:text-white uppercase">{{ approval.user.collector_profile.get_vehicle_type_display }}</p>
+                                    </div>
+                                    <div class="flex justify-between items-center pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Registry ID</p>
+                                        <p class="text-[14px] font-black text-primary">{{ approval.user.collector_profile.vehicle_number }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Collector Documents -->
+                            <div class="space-y-5">
+                                <h4 class="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-[18px]">description</span> Credentials
+                                </h4>
+                                <div class="grid grid-cols-2 gap-4 h-full">
+                                    {% with cp=approval.user.collector_profile %}
+                                    <a href="{{ cp.driving_license.url }}" target="_blank" class="flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800/60 rounded-3xl hover:border-primary hover:shadow-2xl transition-all group/doc">
+                                        <span class="material-symbols-outlined text-4xl text-slate-200 group-hover/doc:text-primary mb-3">driver_license</span>
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">DL Authority</span>
+                                    </a>
+                                    <a href="{{ cp.aadhaar_card.url }}" target="_blank" class="flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800/60 rounded-3xl hover:border-primary hover:shadow-2xl transition-all group/doc">
+                                        <span class="material-symbols-outlined text-4xl text-slate-200 group-hover/doc:text-primary mb-3">fingerprint</span>
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Biometric ID</span>
+                                    </a>
+                                    {% if cp.vehicle_rc %}
+                                    <a href="{{ cp.vehicle_rc.url }}" target="_blank" class="flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-900 border-2 border-slate-50 dark:border-slate-800/60 rounded-3xl hover:border-primary hover:shadow-2xl transition-all group/doc col-span-2">
+                                        <span class="material-symbols-outlined text-4xl text-slate-200 group-hover/doc:text-primary mb-3">local_shipping</span>
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Fleet Registration Document (RC)</span>
+                                    </a>
+                                    {% endif %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Final Nodes -->
+                <div class="lg:w-1/5 flex flex-col gap-6 justify-center">
+                    <form method="POST" action="{% url 'admin_custom:approve_profile' approval.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('Authorize and provision system resources for this partner?')" 
+                                class="w-full py-6 bg-gradient-to-br from-primary via-emerald-600 to-forest text-white rounded-[2rem] font-black text-[14px] uppercase tracking-[0.1em] shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 transition-all active:scale-[0.98]">
+                            Authorize Node
+                        </button>
+                    </form>
+                    
+                    <button onclick="showRejectModal({{ approval.pk }})" 
+                            class="w-full py-6 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800/60 text-slate-400 hover:text-red-500 hover:border-red-500/30 rounded-[2rem] font-black text-[13px] uppercase tracking-widest transition-all shadow-sm">
+                        Decline Entry
+                    </button>
+                    
+                    <a href="{% url 'admin_custom:model_edit' 'accounts' 'account' approval.user.id %}" target="_blank"
+                       class="flex items-center justify-center gap-2 py-2 text-[10px] font-black text-slate-300 uppercase tracking-widest hover:text-slate-500 transition-colors">
+                        Inspect Raw Record <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                    </a>
+                </div>
             </div>
-        {% else %}
-            <div class="p-12 text-center">
-                <svg class="w-20 h-20 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <h3 class="text-lg font-medium text-gray-900 mb-2">All Caught Up!</h3>
-                <p class="text-gray-600">No pending profile approvals at the moment</p>
+        </div>
+        {% empty %}
+        <div class="py-40 bg-white dark:bg-slate-900 rounded-[5rem] border-4 border-dashed border-slate-100 dark:border-slate-800/40 flex flex-col items-center justify-center text-center">
+            <div class="size-24 bg-slate-50 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-200 mb-8 shadow-inner">
+                <span class="material-symbols-outlined text-5xl">task_alt</span>
             </div>
-        {% endif %}
+            <h3 class="text-3xl font-black text-slate-800 dark:text-white uppercase tracking-[0.2em]">Zero Queue</h3>
+            <p class="text-slate-400 font-bold mt-2 uppercase text-[11px] tracking-widest">Global ecosystem credentials are currently synchronized.</p>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
-<!-- Reject Modal (Simple) -->
-<div id="rejectModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <h3 class="text-lg font-bold mb-4">Reject Profile</h3>
-        <form id="rejectForm" method="POST">
-            {% csrf_token %}
-            <textarea name="reason" rows="4" required
-                      class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-500 mb-4"
-                      placeholder="Enter reason for rejection..."></textarea>
-            <div class="flex gap-2">
-                <button type="button" onclick="hideRejectModal()" 
-                        class="flex-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
-                    Cancel
-                </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
-                    Reject
-                </button>
+<!-- Immersive Reject Modal -->
+<div id="rejectModal" class="hidden fixed inset-0 z-[100] items-center justify-center p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-500" onclick="if(event.target === this) hideRejectModal()">
+    <div class="relative max-w-xl w-full bg-white dark:bg-slate-900 rounded-[4rem] p-12 shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/5 transform animate-in zoom-in duration-500">
+        <div class="flex flex-col items-center text-center space-y-8">
+            <div class="size-20 bg-red-50 dark:bg-red-500/10 text-red-500 rounded-3xl flex items-center justify-center shadow-inner">
+                <span class="material-symbols-outlined text-4xl">block</span>
             </div>
-        </form>
+            <div class="space-y-2">
+                <h3 class="text-3xl font-black tracking-tighter">Decline Authority</h3>
+                <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">State valid reason for node rejection</p>
+            </div>
+            
+            <form id="rejectForm" method="POST" class="w-full space-y-8">
+                {% csrf_token %}
+                <div class="relative group">
+                    <textarea name="reason" rows="5" required
+                              class="w-full px-8 py-6 bg-slate-50 dark:bg-slate-800/60 border-2 border-slate-100 dark:border-slate-800/60 rounded-[2.5rem] focus:ring-8 focus:ring-red-500/5 focus:border-red-500 transition-all outline-none text-slate-800 dark:text-white font-bold text-sm placeholder-slate-400 shadow-inner"
+                              placeholder="Describe document Blur/Omission/Inconsistency..."></textarea>
+                    <div class="absolute inset-0 rounded-[2.5rem] bg-red-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button type="button" onclick="hideRejectModal()" 
+                            class="flex-1 py-5 bg-slate-100 dark:bg-slate-800 text-slate-400 font-black rounded-3xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all uppercase tracking-widest text-[11px]">
+                        Abort
+                    </button>
+                    <button type="submit" 
+                            class="flex-[2] py-5 bg-red-500 text-white font-black rounded-3xl hover:bg-red-600 shadow-2xl shadow-red-500/30 transition-all uppercase tracking-widest text-[11px]">
+                        Finalize Rejection
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <script>
 function showRejectModal(approvalId) {
     document.getElementById('rejectForm').action = `/admin-panel/reject/${approvalId}/`;
-    document.getElementById('rejectModal').classList.remove('hidden');
+    const modal = document.getElementById('rejectModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
 }
 
 function hideRejectModal() {
-    document.getElementById('rejectModal').classList.add('hidden');
+    const modal = document.getElementById('rejectModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
 }
 </script>
 {% endblock %}

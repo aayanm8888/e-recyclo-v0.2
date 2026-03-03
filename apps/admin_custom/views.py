@@ -21,12 +21,13 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def dashboard(request):
-    """Admin dashboard"""
+    """Admin dashboard with high-fidelity stats"""
     
     # Get stats
     total_users = Account.objects.filter(is_superuser=False).count()
     pending_approvals = ProfileCompletion.objects.filter(
-        approval_status='pending'
+        approval_status='pending',
+        profile_submitted=True
     ).count()
     total_uploads = PhotoPost.objects.count()
     pending_withdrawals = WithdrawalRequest.objects.filter(
@@ -39,6 +40,13 @@ def dashboard(request):
         is_superuser=False
     ).order_by('-date_joined')[:5]
     
+    # User Breakdown for charts/pills
+    user_breakdown = {
+        'clients': Account.objects.filter(is_client=True).count(),
+        'vendors': Account.objects.filter(is_vendor=True).count(),
+        'collectors': Account.objects.filter(is_collector=True).count(),
+    }
+    
     context = {
         'total_users': total_users,
         'pending_approvals': pending_approvals,
@@ -46,6 +54,7 @@ def dashboard(request):
         'pending_withdrawals': pending_withdrawals,
         'recent_uploads': recent_uploads,
         'recent_users': recent_users,
+        'user_breakdown': user_breakdown,
     }
     
     return render(request, 'admin_custom/dashboard.html', context)
@@ -169,11 +178,21 @@ def users(request):
 @login_required
 @user_passes_test(is_admin)
 def analytics(request):
-    """View analytics"""
+    """View analytics with user-type switching"""
+    import datetime
     
-    # Monthly stats
+    user_type = request.GET.get('user_type', 'all')
     current_year = timezone.now().year
     
+    # Filter users based on type
+    user_qs = Account.objects.filter(is_superuser=False)
+    if user_type == 'client':
+        user_qs = user_qs.filter(is_client=True)
+    elif user_type == 'vendor':
+        user_qs = user_qs.filter(is_vendor=True)
+    elif user_type == 'collector':
+        user_qs = user_qs.filter(is_collector=True)
+
     monthly_uploads = []
     monthly_users = []
     
@@ -183,25 +202,190 @@ def analytics(request):
             created_at__month=month
         ).count()
         
-        new_users = Account.objects.filter(
+        new_users = user_qs.filter(
             date_joined__year=current_year,
-            date_joined__month=month,
-            is_superuser=False
+            date_joined__month=month
         ).count()
         
-        monthly_uploads.append({'month': month, 'count': uploads})
-        monthly_users.append({'month': month, 'count': new_users})
+        # We need a date object for the month filtering in templates usually, 
+        # or just the name. Let's pass a dummy date for formatting.
+        m_date = datetime.date(current_year, month, 1)
+        monthly_uploads.append({'month': m_date, 'count': uploads})
+        monthly_users.append({'month': m_date, 'count': new_users})
     
-    # Overall stats
-    total_value = PhotoPost.objects.filter(
-        status='completed'
-    ).aggregate(total=Sum('vendor_final_value'))['total']
+    # Overall statistics
+    counts = {
+        'all': Account.objects.filter(is_superuser=False).count(),
+        'clients': Account.objects.filter(is_client=True).count(),
+        'vendors': Account.objects.filter(is_vendor=True).count(),
+        'collectors': Account.objects.filter(is_collector=True).count(),
+    }
+    
+    # Fix the Sum aggregation issue (handle None)
+    total_val_agg = PhotoPost.objects.filter(status='completed').aggregate(total=Sum('vendor_final_value'))
+    total_value = total_val_agg['total'] or 0
+    max_uploads = max((m['count'] for m in monthly_uploads), default=0)
+    max_users = max((m['count'] for m in monthly_users), default=0)
     
     context = {
         'monthly_uploads': monthly_uploads,
         'monthly_users': monthly_users,
         'total_value': total_value,
         'current_year': current_year,
+        'counts': counts,
+        'user_type': user_type,
+        'max_uploads': max_uploads,
+        'max_users': max_users,
     }
     
     return render(request, 'admin_custom/analytics.html', context)
+
+
+# --- GENERIC CRUD SYSTEM ---
+
+from django.apps import apps
+from django.forms import modelform_factory
+from django.core.paginator import Paginator
+
+@login_required
+@user_passes_test(is_admin)
+def model_list(request):
+    """List all managed apps and their models"""
+    # Filter only relevant apps
+    exclude_prefixes = ['django.', 'auth.', 'contenttypes.', 'sessions.', 'admin.']
+    all_models = apps.get_models()
+    
+    apps_dict = {}
+    for model in all_models:
+        app_label = model._meta.app_label
+        # Exclude internal django stuff unless requested? 
+        # Let's keep it simple and show everything starting with our apps
+        if not any(app_label.startswith(p) for p in ['django', 'sessions', 'contenttypes', 'admin']):
+            if app_label not in apps_dict:
+                apps_dict[app_label] = []
+            apps_dict[app_label].append({
+                'name': model._meta.verbose_name.title(),
+                'model_name': model._meta.model_name,
+                'count': model.objects.count(),
+                'url_name': f"{app_label}_{model._meta.model_name}"
+            })
+
+    context = {
+        'apps': apps_dict,
+    }
+    return render(request, 'admin_custom/model_list.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def model_items(request, app_label, model_name):
+    """List instances of a specific model with smart field selection"""
+    model = apps.get_model(app_label, model_name)
+    
+    search_query = request.GET.get('q', '')
+    queryset = model.objects.all().order_by('-id')
+    
+    # Smarter search
+    if search_query:
+        fields = [f.name for f in model._meta.fields]
+        from django.db.models import Q
+        q_obj = Q()
+        searchable_suffixes = ['name', 'title', 'email', 'username', 'remarks', 'phone', 'address', 'company']
+        for field in fields:
+            if any(suffix in field.lower() for suffix in searchable_suffixes):
+                q_obj |= Q(**{f"{field}__icontains": search_query})
+        queryset = queryset.filter(q_obj)
+
+    paginator = Paginator(queryset, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # SMART FIELD SELECTION for the table columns
+    all_fields = model._meta.fields
+    # Exclude technical/large fields
+    display_fields = []
+    excluded_names = ['id', 'password', 'last_login', 'is_superuser', 'created_at', 'updated_at', 'deleted_at']
+    
+    for f in all_fields:
+        if f.name not in excluded_names and len(display_fields) < 5:
+            display_fields.append({
+                'name': f.name,
+                'label': f.verbose_name.title()
+            })
+
+    # Prepare data for template
+    items_data = []
+    for item in page_obj:
+        row = {
+            'id': item.id,
+            'str': str(item),
+            'fields': []
+        }
+        for f in display_fields:
+            val = getattr(item, f['name'])
+            # Handle special types
+            if hasattr(val, 'all'): # ManyToMany (though _meta.fields usually doesn't include it)
+                val = ", ".join([str(x) for x in val.all()[:2]])
+            elif hasattr(val, 'url'): # File/Image
+                val = "File Attached"
+            row['fields'].append(val)
+        items_data.append(row)
+
+    context = {
+        'model_name': model._meta.verbose_name.title(),
+        'app_label': app_label,
+        'model_meta_name': model_name,
+        'page_obj': page_obj,
+        'headers': [f['label'] for f in display_fields],
+        'items_data': items_data,
+        'search_query': search_query,
+    }
+    return render(request, 'admin_custom/model_items.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def model_edit(request, app_label, model_name, pk=None):
+    """Create or Edit a model instance"""
+    model = apps.get_model(app_label, model_name)
+    instance = get_object_or_404(model, pk=pk) if pk else None
+    
+    # Generic form
+    GenericForm = modelform_factory(model, exclude=[])
+    
+    if request.method == 'POST':
+        form = GenericForm(request.POST, request.FILES, instance=instance)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"{model._meta.verbose_name} saved successfully.")
+            return redirect('admin_custom:model_items', app_label=app_label, model_name=model_name)
+    else:
+        form = GenericForm(instance=instance)
+
+    context = {
+        'form': form,
+        'model_name': model._meta.verbose_name.title(),
+        'instance': instance,
+        'app_label': app_label,
+        'model_meta_name': model_name,
+    }
+    return render(request, 'admin_custom/model_form.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def model_delete(request, app_label, model_name, pk):
+    """Delete a model instance"""
+    model = apps.get_model(app_label, model_name)
+    instance = get_object_or_404(model, pk=pk)
+    
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, f"{model._meta.verbose_name} deleted successfully.")
+        return redirect('admin_custom:model_items', app_label=app_label, model_name=model_name)
+    
+    return render(request, 'admin_custom/model_confirm_delete.html', {
+        'instance': instance,
+        'model_name': model._meta.verbose_name.title(),
+        'app_label': app_label,
+        'model_meta_name': model_name,
+    })

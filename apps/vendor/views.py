@@ -131,16 +131,18 @@ def dashboard(request):
             if dist <= 5:
                 pending_count += 1
     
-    # Count items needing re-evaluation
-    reeval_count = PhotoPost.objects.filter(
-        vendor=request.user,
-        status='collected',
-        rejection_count__gt=0
-    ).count()
+    # Count items needing re-evaluation (Must have been evaluated BY THIS VENDOR before)
+    from apps.client.models import EvaluationHistory
+    base_collected = PhotoPost.objects.filter(vendor=request.user, status='collected')
+    reeval_count = 0
+    for item in base_collected:
+        if EvaluationHistory.objects.filter(post=item, vendor=request.user).exists():
+            reeval_count += 1
     
     return render(request, 'vendor/dashboard.html', {
         'pending_requests': pending_count,
         'accepted_items': PhotoPost.objects.filter(vendor=request.user, status__in=ALL_ACCEPTED).count(),
+        'completed_items_count': PhotoPost.objects.filter(vendor=request.user, status='completed').count(),
         'total_value': PhotoPost.objects.filter(vendor=request.user, status='completed').aggregate(t=Sum('vendor_final_value'))['t'] or Decimal('0.00'),
         'recent_requests': PhotoPost.objects.filter(vendor=request.user).order_by('-created_at')[:5],
         'profile_completion': pc,
@@ -192,8 +194,13 @@ def pending_requests(request):
                 'distance': round(dist, 2)
             })
     
+    from django.core.paginator import Paginator
+    paginator = Paginator(nearby_items, 10)
+    page_number = request.GET.get('page')
+    requests_page = paginator.get_page(page_number)
+    
     return render(request, 'vendor/pending_requests.html', {
-        'requests': nearby_items,
+        'requests': requests_page,
         'total_count': len(nearby_items)
     })
 
@@ -427,8 +434,16 @@ def decline_reevaluation(request, pk):
         return redirect('vendor:accepted_items')
     
     # Get last offer to show in template and preserve values
-    history = EvaluationHistory.objects.filter(post=item).order_by('-evaluated_at')
+    # ONLY show this vendor's own history
+    history = EvaluationHistory.objects.filter(post=item, vendor=request.user).order_by('-evaluated_at')
     last_offer = history.first()
+    
+    # Context to pass to template
+    ctx = {
+        'item': item, 
+        'last_offer': last_offer,
+        'history': history
+    }
     
     if request.method == 'POST':
         # Sync check
@@ -459,7 +474,7 @@ def decline_reevaluation(request, pk):
         messages.success(request, 'Decline recorded. Client can accept last offer, request return, or transfer to another vendor.')
         return redirect('vendor:accepted_items')
     
-    return render(request, 'vendor/decline_reevaluation.html', {'item': item, 'last_offer': last_offer})
+    return render(request, 'vendor/decline_reevaluation.html', ctx)
 
 
 @login_required
@@ -488,39 +503,55 @@ def accepted_items(request):
         status='rejected'
     )
     
+    # Get IDs of items that THIS vendor has evaluated before (to distinguish re-evals)
+    my_eval_ids = set(EvaluationHistory.objects.filter(
+        vendor=request.user
+    ).values_list('post_id', flat=True))
+
     if tab == 'collector_assigned':
         items = base.filter(status__in=['pickup_scheduled', 'in_transit']).order_by('-created_at')
     elif tab == 'received':
-        items = base.filter(status='collected', rejection_count=0).order_by('-created_at')
+        items_pks = [i.pk for i in base.filter(status='collected') if i.pk not in my_eval_ids]
+        items = PhotoPost.objects.filter(pk__in=items_pks).order_by('-created_at')
     elif tab == 'reevaluation':
-        items = base.filter(status='collected', rejection_count__gt=0).order_by('-created_at')
+        items_pks = [i.pk for i in base.filter(status='collected') if i.pk in my_eval_ids]
+        items = PhotoPost.objects.filter(pk__in=items_pks).order_by('-created_at')
     elif tab == 'under_review':
         items = base.filter(status='under_review').order_by('-evaluation_date')
     elif tab == 'completed':
         items = base.filter(status='completed').order_by('-completed_at')
     elif tab == 'returns':
-        # Items being returned OR already returned to client
         items = base.filter(status__in=['return_requested', 'return_pickup_scheduled', 'return_in_transit', 'returned_to_client']).order_by('-created_at')
     elif tab == 'transferred':
-        # Items that were transferred to another vendor
         items = transferred_items.order_by('-created_at')
     else:
-        # ALL tab - show ALL items: current items + transferred items
         tab = 'all'
         current_items = base.exclude(status__in=['pending', 'rejected'])
-        # Combine current items with transferred items
         all_item_ids = list(current_items.values_list('pk', flat=True)) + list(transferred_items.values_list('pk', flat=True))
         items = PhotoPost.objects.filter(pk__in=all_item_ids).order_by('-created_at')
+
+    from django.core.paginator import Paginator
+    paginator = Paginator(items, 10)
+    page_number = request.GET.get('page')
+    items_page = paginator.get_page(page_number)
+
+    # Re-wrap list into queryset if needed, but for now we'll handle list in counts
+    collected_items = base.filter(status='collected')
+    received_count = 0
+    reeval_count = 0
+    for i in collected_items:
+        if i.pk in my_eval_ids: reeval_count += 1
+        else: received_count += 1
     
-    # Count for current vendor's items
     current_count = base.exclude(status__in=['pending', 'rejected']).count()
     transferred_count = transferred_items.count()
-    
+    transferred_ids = list(transferred_items.values_list('pk', flat=True))
+
     counts = {
-        'all': current_count + transferred_count,  # Include transferred in all count
+        'all': current_count + transferred_count,
         'collector_assigned': base.filter(status__in=['pickup_scheduled', 'in_transit']).count(),
-        'received': base.filter(status='collected', rejection_count=0).count(),
-        'reevaluation': base.filter(status='collected', rejection_count__gt=0).count(),
+        'received': received_count,
+        'reevaluation': reeval_count,
         'under_review': base.filter(status='under_review').count(),
         'completed': base.filter(status='completed').count(),
         'returns': base.filter(status__in=['return_requested', 'return_pickup_scheduled', 'return_in_transit', 'returned_to_client']).count(),
@@ -528,12 +559,12 @@ def accepted_items(request):
     }
     
     # Pass transferred item IDs and set attribute on objects for template convenience
-    transferred_ids = list(transferred_items.values_list('pk', flat=True))
-    for item in items:
+    for item in items_page:
         item.is_transferred = item.pk in transferred_ids or tab == 'transferred'
+        item.has_evaluated_by_me = item.pk in my_eval_ids
     
     return render(request, 'vendor/accepted_items.html', {
-        'items': items, 
+        'items': items_page, 
         'tab': tab, 
         'counts': counts, 
         'is_transferred_tab': tab == 'transferred',
@@ -734,6 +765,7 @@ def item_detail(request, pk):
     else:
         transaction_status = 'transferred'
 
+    s = post.status
     context = {
         'post': post, 
         'history': my_history,
@@ -745,12 +777,20 @@ def item_detail(request, pk):
         'rejected_offers': rejected_offers,
         'accepted_offer': accepted_offer,
         'transaction_status': transaction_status,
-        'collector_status_tag': "Delivered" if post.status in ['collected', 'under_review', 'completed'] else "In Transit",
+        'collector_status_tag': (
+            "Delivered" if s in ['collected', 'under_review', 'completed']
+            else "Searching" if s in ['assigned', 'accepted', 'pickup_scheduled'] and not post.collector
+            else "Scheduled" if s in ['assigned', 'accepted', 'pickup_scheduled']
+            else "Searching" if s == 'return_requested' and not post.return_collector
+            else "Scheduled" if s == 'return_pickup_scheduled'
+            else "In Transit" if s in ['in_transit', 'return_in_transit']
+            else "Returned" if s == 'returned_to_client'
+            else "Pending"
+        ),
     }
 
     # Generate Situational Description for Vendor (CTC)
     status_msg = "Item is being processed."
-    s = post.status
     
     if not is_current_vendor:
         # Perspective of a previous vendor during the transfer process
@@ -786,7 +826,7 @@ def item_detail(request, pk):
         elif s == 'collected':
             if post.vendor_declined_reevaluation:
                 status_msg = "You have declined the re-evaluation request. Awaiting client's choice to accept the last offer or request a return."
-            elif post.rejection_count and post.rejection_count > 0:
+            elif total_offers > 0:
                 status_msg = "Re-evaluation requested! Please review the client's expected price and remarks to provide a revised offer."
             else:
                 status_msg = "Item delivered! Please perform a deep technical inspection and provide your official evaluation offer."

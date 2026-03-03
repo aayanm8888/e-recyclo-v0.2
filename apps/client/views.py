@@ -312,6 +312,11 @@ def my_uploads(request):
     else:
         uploads = base_qs.order_by('-created_at')
 
+    from django.core.paginator import Paginator
+    paginator = Paginator(uploads, 10)
+    page_number = request.GET.get('page')
+    uploads = paginator.get_page(page_number)
+
     context = {
         'page_title': 'My Uploads - E-RECYCLO',
         'uploads': uploads,

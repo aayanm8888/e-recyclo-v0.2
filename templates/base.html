@@ -213,10 +213,10 @@
                 {% url 'vendor:accepted_items' as vacc_url %}
                 {% url 'vendor:reports' as vrep_url %}
                 <a href="{{ vdash_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == vdash_url %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">dashboard</span><span class="nav-text text-sm font-semibold">Market Overview</span>
+                    <span class="material-symbols-outlined text-[22px]">dashboard</span><span class="nav-text text-sm font-semibold">Dashboard</span>
                 </a>
                 <a href="{{ vreq_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == vreq_url %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">shopping_basket</span><span class="nav-text text-sm font-semibold">Open Bids</span>
+                    <span class="material-symbols-outlined text-[22px]">shopping_basket</span><span class="nav-text text-sm font-semibold">Nearby Items</span>
                 </a>
                 <a href="{{ vacc_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.resolver_match.url_name in 'accepted_items,item_detail,evaluate_item,accept_item,reject_item,decline_reevaluation' %}active{% endif %}">
                     <span class="material-symbols-outlined text-[22px]">inventory</span><span class="nav-text text-sm font-semibold">My Inventory</span>
@@ -232,29 +232,30 @@
                 {% url 'collector:my_pickups' as cmypick_url %}
                 {% url 'collector:earnings' as cearn_url %}
                 <a href="{{ cdash_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == cdash_url %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">dashboard_customize</span><span class="nav-text text-sm font-semibold">Collector Hub</span>
+                    <span class="material-symbols-outlined text-[22px]">dashboard_customize</span><span class="nav-text text-sm font-semibold">Dashboard</span>
                 </a>
                 <a href="{{ cavail_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == cavail_url %}active{% endif %}">
                     <span class="material-symbols-outlined text-[22px]">explore</span><span class="nav-text text-sm font-semibold">Find Pickups</span>
                 </a>
                 <a href="{{ cmypick_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.resolver_match.url_name in 'my_pickups,pickup_detail,verify_pickup_otp,verify_delivery_otp,complete_pickup,accept_pickup' %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">local_shipping</span><span class="nav-text text-sm font-semibold">Active Jobs</span>
+                    <span class="material-symbols-outlined text-[22px]">local_shipping</span><span class="nav-text text-sm font-semibold">My Jobs</span>
                 </a>
                 <a href="{{ cearn_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == cearn_url %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">payments</span><span class="nav-text text-sm font-semibold">My Earnings</span>
+                    <span class="material-symbols-outlined text-[22px]">payments</span><span class="nav-text text-sm font-semibold">Earnings</span>
                 </a>
 
             {% elif user.is_admin or user.is_superuser %}
 
                 {% url 'admin_custom:dashboard' as adash_url %}
                 {% url 'admin_custom:pending_approvals' as aapproval_url %}
+                {% url 'admin_custom:model_list' as amodels_url %}
                 {% url 'admin_custom:users' as ausers_url %}
                 {% url 'admin_custom:analytics' as aanalytics_url %}
                 <a href="{{ adash_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == adash_url %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">shield_person</span><span class="nav-text text-sm font-semibold">Admin Panel</span>
+                    <span class="material-symbols-outlined text-[22px]">shield_person</span><span class="nav-text text-sm font-semibold">Overview</span>
                 </a>
                 <a href="{{ aapproval_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == aapproval_url %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">verified_user</span><span class="nav-text text-sm font-semibold">Approvals</span>
+                    <span class="material-symbols-outlined text-[22px]">verified_user</span><span class="nav-text text-sm font-semibold">Profile Approvals</span>
                 </a>
                 <a href="{{ ausers_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == ausers_url %}active{% endif %}">
                     <span class="material-symbols-outlined text-[22px]">group</span><span class="nav-text text-sm font-semibold">User Management</span>
@@ -262,14 +263,28 @@
                 <a href="{{ aanalytics_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == aanalytics_url %}active{% endif %}">
                     <span class="material-symbols-outlined text-[22px]">data_exploration</span><span class="nav-text text-sm font-semibold">System Insights</span>
                 </a>
+                <a href="{{ amodels_url }}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 transition-all {% if request.path == amodels_url %}active{% endif %}">
+                    <span class="material-symbols-outlined text-[22px]">account_tree</span><span class="nav-text text-sm font-semibold">System Explorer</span>
+                </a>
             {% endif %}
 
 
             <div class="mt-4">
                 <div class="mx-5 border-b border-slate-300 dark:border-slate-800/50 mb-4 mt-[17px]" style="min-width: 13px;"></div>
-                <a href="{% url 'accounts:profile' %}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 rounded-2xl transition-all {% if request.resolver_match.url_name in 'profile,edit_profile' %}active{% endif %}">
-                    <span class="material-symbols-outlined text-[22px]">settings</span><span class="nav-text text-sm font-semibold">Settings</span>
-                </a>
+                
+                {% if user.is_vendor %}
+                    <a href="{% url 'accounts:complete_vendor_profile' %}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 rounded-2xl transition-all {% if request.resolver_match.url_name == 'complete_vendor_profile' %}active{% endif %}">
+                        <span class="material-symbols-outlined text-[22px]">settings</span><span class="nav-text text-sm font-semibold">Settings</span>
+                    </a>
+                {% elif user.is_collector %}
+                    <a href="{% url 'accounts:complete_collector_profile' %}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 rounded-2xl transition-all {% if request.resolver_match.url_name == 'complete_collector_profile' %}active{% endif %}">
+                        <span class="material-symbols-outlined text-[22px]">settings</span><span class="nav-text text-sm font-semibold">Settings</span>
+                    </a>
+                {% else %}
+                    <a href="{% url 'accounts:profile' %}" class="nav-link flex items-center gap-3.5 pl-6 pr-3.5 py-3 rounded-2xl transition-all {% if request.resolver_match.url_name in 'profile,edit_profile' %}active{% endif %}">
+                        <span class="material-symbols-outlined text-[22px]">settings</span><span class="nav-text text-sm font-semibold">Settings</span>
+                    </a>
+                {% endif %}
             </div>
         </nav>
     </div>
