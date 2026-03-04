@@ -194,12 +194,20 @@ class VendorProfileForm(forms.ModelForm):
         model = VendorDetails
         fields = [
             'company_name', 'business_address', 'contact_person',
-            'alternate_phone', 'latitude', 'longitude',
-            'profile_photo', 'business_license', 'gst_certificate',
-            'ewaste_authorization', 'id_proof',
-            'gstin_number', 'license_number', 'aadhaar_number', 'pan_number'
+            'alternate_phone', 'date_of_birth', 'use_registration_details', 'latitude', 'longitude',
+            'profile_photo', 'gst_certificate', 'gstin_number', 
+            'pan_card', 'pan_number', 'aadhaar_card', 'aadhaar_number',
+            'ewaste_auth_type', 'ewaste_authorization', 'ewaste_auth_id'
         ]
         widgets = {
+            'date_of_birth': forms.DateInput(attrs={
+                'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
+                'type': 'date'
+            }),
+            'use_registration_details': forms.CheckboxInput(attrs={
+                'class': 'rounded text-primary focus:ring-primary h-5 w-5',
+                'id': 'use_reg_details'
+            }),
             'company_name': forms.TextInput(attrs={
                 'class': 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500',
                 'placeholder': 'Registered Company Name',
@@ -250,17 +258,55 @@ class VendorProfileForm(forms.ModelForm):
             'contact_person': 'Contact Person *',
             'alternate_phone': 'Alternate Phone',
             'profile_photo': 'Company/Person Photo',
-            'business_license': 'Business License *',
             'gst_certificate': 'GST Certificate *',
+            'pan_card': 'PAN Card *',
+            'aadhaar_card': 'Aadhaar Card *',
             'ewaste_authorization': 'E-Waste Authorization *',
-            'id_proof': 'ID Proof (Aadhaar/PAN) *',
         }
         help_texts = {
-            'business_license': 'Upload business registration license (PDF/Image, max 5MB)',
             'gst_certificate': 'Upload GST registration certificate (PDF/Image, max 5MB)',
-            'ewaste_authorization': 'Upload E-Waste authorization from CPCB (PDF/Image, max 5MB)',
-            'id_proof': 'Upload Aadhaar or PAN card (PDF/Image, max 5MB)',
+            'pan_card': 'Upload PAN card (PDF/Image, max 5MB)',
+            'aadhaar_card': 'Upload Aadhaar card (PDF/Image, max 5MB)',
+            'ewaste_authorization': 'Upload the selected authorization document (PDF/Image, max 5MB)',
         }
+    
+    def clean_gstin_number(self):
+        gstin = self.cleaned_data.get('gstin_number', '').upper().strip()
+        if gstin:
+            import re
+            pattern = re.compile(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$')
+            if not pattern.match(gstin):
+                raise ValidationError("Invalid GSTIN format. Example: 27AABCU9603R1ZM")
+        return gstin
+
+    def clean_pan_number(self):
+        pan = self.cleaned_data.get('pan_number', '').upper().strip()
+        if pan:
+            import re
+            pattern = re.compile(r'^[A-Z]{5}[0-9]{4}[A-Z]{1}$')
+            if not pattern.match(pan):
+                raise ValidationError("Invalid PAN format. Example: ABCDE1234F")
+        return pan
+
+    def clean_aadhaar_number(self):
+        aadhaar = self.cleaned_data.get('aadhaar_number', '').strip()
+        if aadhaar:
+            import re
+            # 12 digits, doesn't start with 0 or 1
+            pattern = re.compile(r'^[2-9]{1}[0-9]{11}$')
+            if not pattern.match(aadhaar):
+                raise ValidationError("Invalid Aadhaar format. Must be 12 digits and cannot start with 0 or 1.")
+        return aadhaar
+
+    def clean_ewaste_auth_id(self):
+        auth_id = self.cleaned_data.get('ewaste_auth_id', '').strip()
+        if auth_id:
+            # Basic alphanumeric check for IDs, could be more specific depending on auth_type
+            import re
+            pattern = re.compile(r'^[A-Z0-9/\-]+$')
+            if not pattern.match(auth_id.upper()):
+                raise ValidationError("Invalid Authorization ID format. Use Alphanumeric characters, slashes, or hyphens.")
+        return auth_id
     
     def clean_company_name(self):
         """Validate company name"""

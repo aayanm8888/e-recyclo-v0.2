@@ -329,45 +329,44 @@ def complete_vendor_profile(request):
         return redirect('vendor:dashboard')
     
     if request.method == 'POST':
-        
         form = VendorProfileForm(request.POST, request.FILES, instance=vendor_profile)
         
         if form.is_valid():
             try:
-                saved_profile = form.save()
+                # Handle "Use Registration Details" logic
+                use_reg = form.cleaned_data.get('use_registration_details')
+                vendor = form.save(commit=False)
                 
-                # Verify it's actually in database
+                if use_reg:
+                    # Sync from Account basic info
+                    vendor.contact_person = f"{request.user.first_name} {request.user.last_name}".strip()
+                    vendor.alternate_phone = request.user.phone_number
+                
+                vendor.save()
+                
+                # Refresh and update completion
                 vendor_profile.refresh_from_db()
-                
-                # CRITICAL FIX: Reinitialize form with fresh data from DB
-                # This makes uploaded files show in the UI
-                form = VendorProfileForm(instance=vendor_profile)
-                
-                # Update profile completion
                 completion_percentage = profile_completion.calculate_completion()
                 
                 if completion_percentage == 100:
                     profile_completion.profile_submitted = True
                     profile_completion.approval_status = 'pending'
                     profile_completion.submitted_at = timezone.now()
-                    
-                    # Clear rejection data if resubmitting after rejection
-                    if profile_completion.rejection_reason:
-                        profile_completion.rejection_reason = ''
-                        profile_completion.rejected_at = None
-                    
                     profile_completion.save()
-                    
-                    messages.success(request, '✓ Profile resubmitted successfully! Admin will review it soon.')
+                    messages.success(request, '✓ Profile submitted for verification! We will review it shortly.')
                     return redirect('vendor:dashboard')
                 else:
-                    missing_count = len(profile_completion.missing_fields)
-                    messages.success(request, f'Progress saved! {completion_percentage}% complete. Files uploaded successfully!')
-                    
+                    messages.success(request, f'Progress saved! {completion_percentage}% complete.')
+                
+                # Re-init form with fresh data
+                form = VendorProfileForm(instance=vendor_profile)
+                
             except Exception as e:
                 messages.error(request, f'Error saving profile: {str(e)}')
         else:
-            messages.error(request, 'Please fix the errors below.')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field.replace('_', ' ').capitalize()}: {error}")
     else:
         form = VendorProfileForm(instance=vendor_profile)
     
@@ -376,7 +375,11 @@ def complete_vendor_profile(request):
         'completion_percentage': profile_completion.calculate_completion(),
         'missing_fields': profile_completion.missing_fields,
         'page_title': 'Complete Vendor Profile - E-RECYCLO',
-        'profile_completion': profile_completion,  # Add this for rejection display
+        'profile_completion': profile_completion,
+        'reg_data': {
+            'name': f"{request.user.first_name} {request.user.last_name}".strip(),
+            'phone': request.user.phone_number
+        }
     }
     return render(request, 'accounts/complete_vendor_profile.html', context)
 

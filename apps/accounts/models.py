@@ -424,12 +424,17 @@ class ProfileCompletion(models.Model):
                     ('company_name', vendor.company_name),
                     ('business_address', vendor.business_address),
                     ('contact_person', vendor.contact_person),
+                    ('date_of_birth', vendor.date_of_birth),
                     ('latitude', vendor.latitude),
                     ('longitude', vendor.longitude),
-                    ('business_license', vendor.business_license),
                     ('gst_certificate', vendor.gst_certificate),
+                    ('gstin_number', vendor.gstin_number),
+                    ('pan_card', vendor.pan_card),
+                    ('pan_number', vendor.pan_number),
+                    ('aadhaar_card', vendor.aadhaar_card),
+                    ('aadhaar_number', vendor.aadhaar_number),
                     ('ewaste_authorization', vendor.ewaste_authorization),
-                    ('id_proof', vendor.id_proof),
+                    ('ewaste_auth_id', vendor.ewaste_auth_id),
                 ]
                 
                 completed = sum(1 for _, value in required_fields if value)
@@ -602,6 +607,16 @@ class VendorDetails(models.Model):
         blank=True,
         help_text="Alternate contact number"
     )
+    date_of_birth = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date of birth of the business owner/contact"
+    )
+
+    use_registration_details = models.BooleanField(
+        default=True,
+        help_text="Use details provided during registration (Name/Phone)"
+    )
     
     # Location (for distance calculation)
     latitude = models.FloatField(
@@ -624,14 +639,7 @@ class VendorDetails(models.Model):
         help_text="Company/person photo"
     )
     
-    # Required Documents
-    business_license = models.FileField(
-        upload_to='vendor/business_licenses/',
-        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])],
-        blank=True,
-        null=True,
-        help_text="Business registration license (PDF or image, max 5MB)"
-    )
+    # Required Documents (Indian Compliance)
     gst_certificate = models.FileField(
         upload_to='vendor/gst_certificates/',
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])],
@@ -639,19 +647,44 @@ class VendorDetails(models.Model):
         null=True,
         help_text="GST registration certificate (PDF or image, max 5MB)"
     )
+    pan_card = models.FileField(
+        upload_to='vendor/pan_cards/',
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])],
+        blank=True,
+        null=True,
+        help_text="PAN card document (PDF or image, max 5MB)"
+    )
+    aadhaar_card = models.FileField(
+        upload_to='vendor/aadhaar_cards/',
+        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])],
+        blank=True,
+        null=True,
+        help_text="Aadhaar card document (PDF or image, max 5MB)"
+    )
+    
+    # E-Waste Authorization (Choose 1 of 3)
+    EWASTE_AUTH_CHOICES = [
+        ('cpcb', 'CPCB Recycler Registration'),
+        ('spcb', 'SPCB Consent to Operate (CTO)'),
+        ('hazardous', 'Hazardous Waste Authorization'),
+    ]
+    ewaste_auth_type = models.CharField(
+        max_length=20,
+        choices=EWASTE_AUTH_CHOICES,
+        default='cpcb',
+        help_text="Type of e-waste authorization document"
+    )
     ewaste_authorization = models.FileField(
         upload_to='vendor/ewaste_auth/',
         validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])],
         blank=True,
         null=True,
-        help_text="E-Waste Recycling Authorization from CPCB (PDF or image, max 5MB)"
+        help_text="Authorized recycling document (PDF or image, max 5MB)"
     )
-    id_proof = models.FileField(
-        upload_to='vendor/id_proofs/',
-        validators=[FileExtensionValidator(allowed_extensions=['pdf', 'jpg', 'jpeg', 'png'])],
+    ewaste_auth_id = models.CharField(
+        max_length=50,
         blank=True,
-        null=True,
-        help_text="ID proof - Aadhaar/PAN/Driving License (PDF or image, max 5MB)"
+        help_text="ID number on the e-waste authorization document"
     )
     
     # Document ID Numbers (Manual Entry)
@@ -697,10 +730,10 @@ class VendorDetails(models.Model):
     def is_documents_complete(self):
         """Check if all required documents are uploaded"""
         return all([
-            self.business_license,
             self.gst_certificate,
-            self.ewaste_authorization,
-            self.id_proof
+            self.pan_card,
+            self.aadhaar_card,
+            self.ewaste_authorization
         ])
 
 

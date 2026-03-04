@@ -173,13 +173,18 @@ class VendorDetailsAdmin(admin.ModelAdmin):
         ('Business Information', {
             'fields': (
                 'company_name', 'business_address', 'contact_person',
-                'alternate_phone', 'latitude', 'longitude', 'profile_photo'
+                'alternate_phone', 'use_registration_details', 'latitude', 'longitude', 'profile_photo'
             )
         }),
-        ('Documents', {
+        ('Documents (Files)', {
             'fields': (
-                'business_license', 'gst_certificate',
-                'ewaste_authorization', 'id_proof'
+                'gst_certificate', 'pan_card', 'aadhaar_card', 'ewaste_authorization'
+            )
+        }),
+        ('Regulatory IDs', {
+            'fields': (
+                'gstin_number', 'pan_number', 'aadhaar_number',
+                'ewaste_auth_type', 'ewaste_auth_id'
             )
         }),
         ('Verification', {
