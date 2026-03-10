@@ -20,6 +20,5 @@ urlpatterns = [
     path('start-trip/<int:pk>/',              views.start_trip,           name='start_trip'),
     path('earnings/',                         views.earnings,             name='earnings'),
     path('earnings/download/',                views.download_statement,   name='download_statement'),
+    path('tracking/<int:post_pk>/',           views.live_tracking_data,   name='live_tracking_data'),
 ]
-
-

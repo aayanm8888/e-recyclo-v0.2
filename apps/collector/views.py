@@ -992,3 +992,136 @@ def download_statement(request):
     except Exception as e:
         messages.error(request, f'Could not generate statement: {str(e)}')
         return redirect('collector:earnings')
+
+# ── LIVE TRACKING DATA API ─────────────────────────────────────────────────────
+@login_required
+def live_tracking_data(request, post_pk):
+    """
+    AJAX GET — Returns live tracking data for a PhotoPost transit.
+    Accessible by:  post owner (client), currently assigned vendor, or admin/staff.
+    Called every ~6 s by the client/vendor detail page JS.
+    """
+    from apps.client.models import PhotoPost, EvaluationHistory
+
+    try:
+        post = PhotoPost.objects.select_related(
+            'collector__collector_profile',
+            'return_collector__collector_profile',
+            'vendor__vendor_profile',
+            'user',
+        ).get(pk=post_pk)
+    except PhotoPost.DoesNotExist:
+        return JsonResponse({'is_active': False, 'error': 'Not found'}, status=404)
+
+    user = request.user
+    is_authorized = (
+        (getattr(user, 'is_client', False) and post.user_id == user.pk) or
+        (getattr(user, 'is_vendor', False) and post.vendor_id == user.pk) or
+        user.is_staff or getattr(user, 'is_admin', False)
+    )
+    if not is_authorized:
+        return JsonResponse({'is_active': False, 'error': 'Unauthorized'}, status=403)
+
+    ACTIVE_STATUSES = {
+        'pickup_scheduled', 'in_transit',
+        'return_pickup_scheduled', 'return_in_transit',
+    }
+    status = post.status
+    if status not in ACTIVE_STATUSES:
+        return JsonResponse({'is_active': False, 'status': status})
+
+    # ── Determine trip direction ──────────────────────────────────────────────
+    is_return = status in ('return_pickup_scheduled', 'return_in_transit')
+    trip_type  = 'return' if is_return else 'regular'
+    phase      = 'to_pickup' if status in ('pickup_scheduled', 'return_pickup_scheduled') else 'delivering'
+
+    def safe_lat(obj):
+        try: return float(obj) if obj else None
+        except (TypeError, ValueError): return None
+
+    # ── Delivery destination is always the current vendor (for non-return) ────
+    if not is_return:
+        try:
+            vp = post.vendor.vendor_profile
+            delivery_lat   = safe_lat(vp.latitude)
+            delivery_lng   = safe_lat(vp.longitude)
+            delivery_label = vp.company_name or post.vendor.get_full_name()
+        except AttributeError:
+            delivery_lat = delivery_lng = None
+            delivery_label = 'Vendor Facility'
+
+        # Check for vendor-to-vendor transfer
+        transfer_eval = EvaluationHistory.objects.filter(
+            post=post, client_choice='transfer'
+        ).select_related('vendor__vendor_profile').order_by('-evaluated_at').first()
+
+        if transfer_eval and transfer_eval.vendor:
+            trip_type = 'transfer'
+            try:
+                prev_vp      = transfer_eval.vendor.vendor_profile
+                pickup_lat   = safe_lat(prev_vp.latitude)
+                pickup_lng   = safe_lat(prev_vp.longitude)
+                pickup_label = prev_vp.company_name or transfer_eval.vendor.get_full_name()
+            except AttributeError:
+                pickup_lat = pickup_lng = None
+                pickup_label = 'Previous Vendor'
+        else:
+            pickup_lat   = safe_lat(post.latitude)
+            pickup_lng   = safe_lat(post.longitude)
+            pickup_label = 'Client: ' + post.user.get_full_name()
+
+        collector = post.collector
+    else:
+        # Return trip: vendor → client
+        try:
+            vp = post.vendor.vendor_profile
+            pickup_lat   = safe_lat(vp.latitude)
+            pickup_lng   = safe_lat(vp.longitude)
+            pickup_label = vp.company_name or post.vendor.get_full_name()
+        except AttributeError:
+            pickup_lat = pickup_lng = None
+            pickup_label = 'Vendor'
+
+        delivery_lat   = safe_lat(post.latitude)
+        delivery_lng   = safe_lat(post.longitude)
+        delivery_label = 'Client: ' + post.user.get_full_name()
+        collector      = post.return_collector
+
+    # ── Collector must exist ──────────────────────────────────────────────────
+    if not collector:
+        return JsonResponse({'is_active': False, 'status': status, 'no_collector': True})
+
+    try:
+        cp = collector.collector_profile
+    except AttributeError:
+        return JsonResponse({'is_active': False})
+
+    # ── Has trip actually started (OTP given / already in transit)? ───────────
+    active_pickup = post.collector_pickups.filter(
+        collector=collector,
+        status__in=['assigned', 'accepted', 'in_progress'],
+    ).order_by('-created_at').first()
+
+    trip_started = (
+        bool(active_pickup and active_pickup.trip_start_at) or
+        status in ('in_transit', 'return_in_transit')
+    )
+
+    return JsonResponse({
+        'is_active':      True,
+        'trip_started':   trip_started,
+        'trip_type':      trip_type,      # regular | return | transfer
+        'phase':          phase,          # to_pickup | delivering
+        'status':         status,
+        'collector_lat':  safe_lat(cp.latitude),
+        'collector_lng':  safe_lat(cp.longitude),
+        'collector_name': collector.get_full_name(),
+        'vehicle_type':   cp.vehicle_type or 'bike',
+        'vehicle_number': cp.vehicle_number or '',
+        'pickup_lat':     pickup_lat,
+        'pickup_lng':     pickup_lng,
+        'pickup_label':   pickup_label,
+        'delivery_lat':   delivery_lat,
+        'delivery_lng':   delivery_lng,
+        'delivery_label': delivery_label,
+    })
