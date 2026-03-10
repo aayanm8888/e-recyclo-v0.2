@@ -7,14 +7,18 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from apps.accounts import views as account_views
+from apps.pages import views as page_views   # ← NEW
 
 urlpatterns = [
     # Home
     path('', account_views.home_view, name='home'),
-    
+
     # Django Admin
     path('admin/', admin.site.urls),
-    
+
+    # Public informational pages                    ← NEW
+    path('', include('apps.pages.urls')),
+
     # Apps
     path('accounts/', include('apps.accounts.urls')),
     path('client/', include('apps.client.urls')),
@@ -32,5 +36,12 @@ if settings.DEBUG:
 
 # Custom admin site headers
 admin.site.site_header = "E-RECYCLO Administration"
-admin.site.site_title = "E-RECYCLO Admin"
+admin.site.site_title  = "E-RECYCLO Admin"
 admin.site.index_title = "Welcome to E-RECYCLO Administration"
+
+# ── Custom error handlers ──────────────────────────────────────────────────
+# These replace Django's default error pages with your branded 404 and 403.
+# Works in both DEBUG=True and DEBUG=False.
+handler404 = 'apps.pages.views.handler_404'
+handler403 = 'apps.pages.views.handler_403'
+handler500 = 'apps.pages.views.handler_500'

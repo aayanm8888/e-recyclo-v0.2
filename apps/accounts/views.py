@@ -907,3 +907,5 @@ def change_password_view(request):
         'form': form,
         'page_title': 'Change Password - E-RECYCLO'
     })
+
+

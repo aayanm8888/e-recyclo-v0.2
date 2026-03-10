@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'apps.ai_services.apps.AiServicesConfig',
     'apps.notifications.apps.NotificationsConfig',
     'apps.certificates.apps.CertificatesConfig',
+    'apps.pages.apps.PagesConfig',
 ]
 
 MIDDLEWARE = [
